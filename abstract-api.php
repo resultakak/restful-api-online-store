@@ -23,7 +23,7 @@ abstract class API
     public function __construct($request) {
         header("Content-Type: application/json");
 		
-		$this->resource = rtrim($request,'/');
+	echo $this->resource = rtrim($request,'/');
 		
 		/*$temp = strpos($request,'?') ? explode('&',end(explode('?',$request))) : null;
 		
@@ -38,8 +38,8 @@ abstract class API
 		
     	//the below code needs review. unsatisfactory.
         $this->method = $_SERVER['REQUEST_METHOD'];
-
-        if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
+		
+		if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
             if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'DELETE') {
                 $this->method = 'DELETE';
             } else if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'PUT') {
@@ -56,6 +56,8 @@ abstract class API
             break;
         case 'GET':
             $this->request = $this->_cleanInputs($_GET);
+			print_r($_GET);
+			die();
             break;
         case 'PUT':
             $this->request = $this->_cleanInputs($_GET);
