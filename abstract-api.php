@@ -1,7 +1,7 @@
 <?php
 abstract class API
 {
-    /**
+	/**
      * The HTTP method of the request, either GET, POST, PUT or DELETE
      */
     protected $method = '';
@@ -23,15 +23,19 @@ abstract class API
     public function __construct($request) {
         header("Content-Type: application/json");
 		
+		$this->resource = rtrim(current(explode('?',$request)),'/');
+		$temp = strpos($request,'?') ? explode('&',end(explode('?',$request))) : null;
 		
-        $this->args = explode('/', rtrim($request, '/'));
-        $this->resource = array_shift($this->args);
+		if($temp!=null)
+		{
+        	for($i=0;$i<count($temp);$i++)
+			{
+			$this->query_params[$i][0]=current(explode('=',$temp[$i]));
+			$this->query_params[$i][1]=end(explode('=',$temp[$i]));
+			}
+		}
 		
-        if (array_key_exists(0, $this->args) && !is_numeric($this->args[0])) {
-            $this->verb = array_shift($this->args);
-        }
-		
-		//the below code needs review. unsatisfactory.
+    	//the below code needs review. unsatisfactory.
         $this->method = $_SERVER['REQUEST_METHOD'];
         if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
             if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'DELETE') {
@@ -89,22 +93,11 @@ abstract class API
         $status = array( 
             200 => 'OK', 
             201 => 'Created',   
-            202 => 'Accepted',   
             204 => 'No Content',   
             400 => 'Bad Request',   
             401 => 'Unauthorized',   
-            403 => 'Forbidden',   
             404 => 'Not Found',   
             405 => 'Method Not Allowed',   
-            406 => 'Not Acceptable',   
-            407 => 'Proxy Authentication Required',   
-            408 => 'Request Timeout',   
-            409 => 'Conflict',   
-            410 => 'Gone',   
-            411 => 'Length Required',   
-            412 => 'Precondition Failed',   
-            413 => 'Request Entity Too Large',   
-            414 => 'Request-URI Too Long',   
             415 => 'Unsupported Media Type',   
             500 => 'Internal Server Error'   
             ); 
