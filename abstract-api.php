@@ -37,6 +37,7 @@ abstract class API
 		
     	//the below code needs review. unsatisfactory.
         $this->method = $_SERVER['REQUEST_METHOD'];
+
         if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
             if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'DELETE') {
                 $this->method = 'DELETE';
@@ -57,7 +58,7 @@ abstract class API
             break;
         case 'PUT':
             $this->request = $this->_cleanInputs($_GET);
-            $this->file = file_get_contents("php://input");
+            $this->input_file = file_get_contents("php://input");
             break;
         default:
             $this->_response('Invalid Method', 405);
