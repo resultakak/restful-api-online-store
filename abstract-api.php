@@ -102,7 +102,15 @@ abstract class API
             415 => 'Unsupported Media Type',   
             500 => 'Internal Server Error'   
             ); 
-        return ($status[$code])?$status[$code]:$status[500];
-}
+			if(array_key_exists($code, $status))
+			{
+				return $status[$code];	
+			}
+			else 
+			{
+				return $status[500];
+			}
+        
+	}
 }
 ?>

@@ -1,12 +1,25 @@
 <?php
+
 require_once 'abstract-api.php';
+
 class MyAPI extends API
 {
     protected $User;
 
-    public function __construct($request, $origin) {
-        parent::__construct($request);
-
+    public function __construct($request) {
+       // try {
+        	
+        	echo $_REQUEST['request'];
+			die();
+    		//$API = new MyAPI($_REQUEST['request']);
+    		//echo $API->processAPI();
+		 
+	//	} catch (Exception $e) {
+    	//	echo json_encode(Array('error' => $e->getMessage()));
+		//	}
+			
+//        parent::__construct($request);
+/*
         // Abstracted out for example
         $APIKey = new Models\APIKey();
         $User = new Models\User();
@@ -22,7 +35,7 @@ class MyAPI extends API
 			}
         
 
-        $this->User = 'hello';
+        $this->User = 'hello';*/
     }
 
     /**
@@ -36,4 +49,5 @@ class MyAPI extends API
         }
      }
  }
+$API = new MyAPI($_REQUEST['request']);
 ?>
