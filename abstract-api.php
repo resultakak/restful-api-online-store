@@ -9,7 +9,8 @@ abstract class API
      * The Resource requested in the URI. eg: /products/2/categories/1
      */
     protected $resource = '';
-    /**
+	protected $resourceHierarchy = Array();
+	/**
      * Any query parameters appended with the URL for a PUT Request
      */
     protected $query_params = Array();
@@ -23,7 +24,9 @@ abstract class API
     public function __construct($request) {
         header("Content-Type: application/json");
 		
-	echo $this->resource = rtrim($request,'/');
+		$this->resource = rtrim($request,'/');
+		$this->resourceHierarchy = explode('/',$request);
+		
 		
 		/*$temp = strpos($request,'?') ? explode('&',end(explode('?',$request))) : null;
 		
@@ -36,9 +39,9 @@ abstract class API
 			}
 		}*/
 		
-    	//the below code needs review. unsatisfactory.
-        $this->method = $_SERVER['REQUEST_METHOD'];
+    	$this->method = $_SERVER['REQUEST_METHOD'];
 		
+		//since PHP is only capable of processing POST and GET and not PUT and DELETE. Try to find another code snippet.
 		if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
             if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'DELETE') {
                 $this->method = 'DELETE';
@@ -56,9 +59,7 @@ abstract class API
             break;
         case 'GET':
             $this->request = $this->_cleanInputs($_GET);
-			print_r($_GET);
-			die();
-            break;
+			break;
         case 'PUT':
             $this->request = $this->_cleanInputs($_GET);
             $this->input_file = file_get_contents("php://input");

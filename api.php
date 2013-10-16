@@ -35,10 +35,37 @@ class MyAPI extends API
             return "Only accepts GET requests";
         }
      }
+	 
+	 public function controllerMain()
+	 {
+		//echo 'Query Parameters';
+		//print_r($this->request);
+		
+		//echo 'Resource Hierarchy';
+		//print_r($this->resourceHierarchy);
+		
+		$count = count($this->resourceHierarchy);
+		
+		if(is_numeric($this->resourceHierarchy[$count-1]))
+		{
+			
+		if($this->resourceHierarchy[$count-2]=='products')
+		{
+			echo 'Single Product';
+		}
+		
+		
+		
+		}
+		
+		
+		die();	 	
+	 }
  }
  	try {
         $API = new MyAPI($_REQUEST['request']);
-    	echo $API->processAPI();
+		$API->controllerMain();
+  //  	echo $API->processAPI();
 	} catch (Exception $e) {
     		echo json_encode(Array('error' => $e->getMessage()));
 			}
