@@ -5,10 +5,20 @@ require_once 'abstract-api.php';
 class MyAPI extends API
 {
     protected $User;
-
+	public $conn;
     public function __construct($request) {
        	
 		parent::__construct($request);
+		try 
+	 	{
+     	$this->conn = new PDO('mysql:host=localhost;dbname=online-store', 'root', '');
+     	$this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	 	}
+	 	catch(PDOException $e) 
+	 	{
+     	echo 'ERROR: ' . $e->getMessage();
+		}
+		
 /*
         // Abstracted out for example
         $APIKey = new Models\APIKey();
@@ -43,24 +53,51 @@ class MyAPI extends API
 		
 		//echo 'Resource Hierarchy';
 		//print_r($this->resourceHierarchy);
-		
+		//echo $this->method;
+				
 		$count = count($this->resourceHierarchy);
 		
 		if(is_numeric($this->resourceHierarchy[$count-1]))
 		{
-			
-		if($this->resourceHierarchy[$count-2]=='products')
-		{
-			echo 'Single Product';
+			if($this->resourceHierarchy[$count-2]=='products')
+			{
+				switch($this->method) {
+					case 'GET': $this->getSingleProduct($this->resourceHierarchy[$count-1]);
+								break;
+					case 'POST': echo 'Invalid';
+								break;
+					case 'PUT': echo 'Update a SIngle Product';
+								break;
+					case 'DELETE': echo 'Delete a SIngle Product';
+								break;
+					default: break;
+				}
+			}
+		}
+		else {
+				switch($this->method) {
+					case 'GET': echo 'Get Multiple Product';
+								break;
+					case 'POST': echo 'Create a Product';
+								break;
+					case 'PUT': echo 'Invalid';
+								break;
+					case 'DELETE': echo 'Invalid';
+								break;
+								default: break;
+				}
 		}
 		
-		
-		
-		}
-		
-		
-		die();	 	
+		die();
 	 }
+	 public function getSingleProduct($product_id)
+	 {
+	 	$statement=$this->conn->prepare("SELECT * FROM users");
+		$statement->execute();
+		$results=$statement->fetchAll(PDO::FETCH_ASSOC);
+		$json=json_encode($results);
+		echo $json;
+	}
  }
  	try {
         $API = new MyAPI($_REQUEST['request']);
