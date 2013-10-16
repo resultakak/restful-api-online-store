@@ -7,18 +7,8 @@ class MyAPI extends API
     protected $User;
 
     public function __construct($request) {
-       // try {
-        	
-        	echo $_REQUEST['request'];
-			die();
-    		//$API = new MyAPI($_REQUEST['request']);
-    		//echo $API->processAPI();
-		 
-	//	} catch (Exception $e) {
-    	//	echo json_encode(Array('error' => $e->getMessage()));
-		//	}
-			
-//        parent::__construct($request);
+       	
+		parent::__construct($request);
 /*
         // Abstracted out for example
         $APIKey = new Models\APIKey();
@@ -38,9 +28,6 @@ class MyAPI extends API
         $this->User = 'hello';*/
     }
 
-    /**
-     * Example of an Endpoint
-     */
      protected function example() {
         if ($this->method == 'GET') {
             return "Your name is " . $this->User->name;
@@ -49,5 +36,11 @@ class MyAPI extends API
         }
      }
  }
-$API = new MyAPI($_REQUEST['request']);
+ 	try {
+        $API = new MyAPI($_REQUEST['request']);
+    	echo $API->processAPI();
+	} catch (Exception $e) {
+    		echo json_encode(Array('error' => $e->getMessage()));
+			}
+		
 ?>

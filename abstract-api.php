@@ -23,8 +23,9 @@ abstract class API
     public function __construct($request) {
         header("Content-Type: application/json");
 		
-		$this->resource = rtrim(current(explode('?',$request)),'/');
-		$temp = strpos($request,'?') ? explode('&',end(explode('?',$request))) : null;
+		$this->resource = rtrim($request,'/');
+		
+		/*$temp = strpos($request,'?') ? explode('&',end(explode('?',$request))) : null;
 		
 		if($temp!=null)
 		{
@@ -33,7 +34,7 @@ abstract class API
 			$this->query_params[$i][0]=current(explode('=',$temp[$i]));
 			$this->query_params[$i][1]=end(explode('=',$temp[$i]));
 			}
-		}
+		}*/
 		
     	//the below code needs review. unsatisfactory.
         $this->method = $_SERVER['REQUEST_METHOD'];
