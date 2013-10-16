@@ -1,24 +1,17 @@
 <?php
 
 require_once 'abstract-api.php';
+require_once 'db.php';
 
 class MyAPI extends API
 {
     protected $User;
 	public $conn;
+	public $db;
     public function __construct($request) {
        	
 		parent::__construct($request);
-		try 
-	 	{
-     	$this->conn = new PDO('mysql:host=localhost;dbname=online-store', 'root', '');
-     	$this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	 	}
-	 	catch(PDOException $e) 
-	 	{
-     	echo 'ERROR: ' . $e->getMessage();
-		}
-		
+		$this->db = new db();	
 /*
         // Abstracted out for example
         $APIKey = new Models\APIKey();
@@ -48,13 +41,6 @@ class MyAPI extends API
 	 
 	 public function controllerMain()
 	 {
-		//echo 'Query Parameters';
-		//print_r($this->request);
-		
-		//echo 'Resource Hierarchy';
-		//print_r($this->resourceHierarchy);
-		//echo $this->method;
-				
 		$count = count($this->resourceHierarchy);
 		
 		if(is_numeric($this->resourceHierarchy[$count-1]))
@@ -92,18 +78,20 @@ class MyAPI extends API
 	 }
 	 public function getSingleProduct($product_id)
 	 {
-	 	$statement=$this->conn->prepare("SELECT * FROM users");
-		$statement->execute();
-		$results=$statement->fetchAll(PDO::FETCH_ASSOC);
-		$json=json_encode($results);
-		echo $json;
-	}
+	 	echo json_encode($this->db->select('users'));
+     }
+	 
+	 public function select()
+	 {
+	 	
+	 }
  }
  	try {
         $API = new MyAPI($_REQUEST['request']);
 		$API->controllerMain();
   //  	echo $API->processAPI();
-	} catch (Exception $e) {
+		} 
+		catch (Exception $e) {
     		echo json_encode(Array('error' => $e->getMessage()));
 			}
 		
