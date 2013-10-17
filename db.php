@@ -16,15 +16,35 @@ class db {
 		}
 	}
 	
-    public function select($table, $fields = '*' , $where = '1=1', $params = array(), $limit = '', $sort, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
+    public function select($table, $fields = '*' ,  $conditionParams, $limit = '', $sort, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
 
         //create query
-        $query = "SELECT $fields FROM $table WHERE $where order by $sort $limit";
-		//prepare statement
-        $stmt = $this->conn->query($query);
-
-        $stmt->execute($params);
-
+        $query = "SELECT $fields FROM $table";
+		
+		if(count($conditionParams)>0)
+		{
+			$query.= " WHERE "; 
+			$keys=array_keys($conditionParams);
+			for($i=0;$i<count($keys);$i++)
+			{
+				$query.= $keys[$i];
+				$query.= ' = ';
+				$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].' and ';
+			}
+		}
+		
+		$query.= " order by $sort $limit";
+		$stmt = $this->conn->prepare($query);
+        
+		if(count($conditionParams)>0)
+		{
+			for($i=0;$i<count($keys);$i++)
+			{
+				$stmt->bindParam(':'.$keys[$i], $conditionParams[$keys[$i]]);
+			}                            
+		}
+		
+		$stmt->execute();
         return $stmt->fetchAll($fetchStyle);
     }
 	
@@ -54,7 +74,7 @@ class db {
 	}
 	
 	public function update($table,$updateParams,$conditionParams)
-	{
+	{//pending changes and optimization. duplicate parameters
 		$query = "UPDATE $table SET ";
 		
 		$keys=array_keys($updateParams);
@@ -65,7 +85,16 @@ class db {
 			$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].',';
 		}
 			
-		echo $query.=" where 1=1";
+		$query.=" where ";
+		
+		$conditionKeys=array_keys($conditionParams);
+		for($i=0;$i<count($conditionKeys);$i++)
+		{
+			$query.= $conditionKeys[$i];
+			$query.= '=';
+			$query.= ($i==count($conditionKeys)-1)? ':D'.$conditionKeys[$i] : ':D'.$conditionKeys[$i].' and ';
+		}
+		
 		
 		$stmt = $this->conn->prepare($query);
         
@@ -73,20 +102,44 @@ class db {
 		{
 			$stmt->bindParam(':'.$keys[$i], $updateParams[$keys[$i]]);
 		}                            
+		for($i=0;$i<count($conditionKeys);$i++)
+		{
+			$stmt->bindParam(':D'.$conditionKeys[$i], $conditionParams[$keys[$i]]);
+		}                            
+		
 		$stmt->execute(); 
 	}
 	
-	public function delete($table, $where = '1=1', $params = array())
+	public function delete($table, $conditionParams)
 	{
         //create query
-        $query = "DELETE FROM $table WHERE $where";
+        $query = "DELETE FROM $table";
+		
+		if(count($conditionParams)>0)
+		{
+			$query.= " WHERE "; 
+			$keys=array_keys($conditionParams);
+			for($i=0;$i<count($keys);$i++)
+			{
+				$query.= $keys[$i];
+				$query.= ' = ';
+				$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].' and ';
+			}
+		}
 		
         //prepare statement
-        $stmt = $this->conn->query($query);
+        $stmt = $this->conn->prepare($query);
+		
+		if(count($conditionParams)>0)
+		{
+			for($i=0;$i<count($keys);$i++)
+			{
+				$stmt->bindParam(':'.$keys[$i], $conditionParams[$keys[$i]]);
+			}                            
+		}
 
-        $stmt->execute($params);
+        $stmt->execute();
 				
 	}
-	
 }
 ?>
