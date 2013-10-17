@@ -34,6 +34,7 @@ class db {
 		}
 		
 		$query.= " order by $sort $limit";
+		
 		$stmt = $this->conn->prepare($query);
         
 		if(count($conditionParams)>0)

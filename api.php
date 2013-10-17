@@ -128,6 +128,9 @@ class MyAPI extends API
 	{
 	    $fields='*';
 	 	$sort='user_id asc ';
+		$page=1;
+		$per_page=10;
+		
 		$conditionParamsArray = Array();
 	 	//Checking if the request needs response to be filtered
 	 	if(array_key_exists('fields', $this->request))
@@ -146,15 +149,15 @@ class MyAPI extends API
 		//Checking if the request needs pagination
 		if(array_key_exists('page', $this->request))
 		{
-			
+			$page=$this->request['page'];
 			unset($this->request['page']);
 		}
 		if(array_key_exists('per_page', $this->request))
 		{
-			
+			$per_page=$this->request['per_page'];
 			unset($this->request['per_page']);
 		}
-		
+		$limit='limit '.(($page-1)*$per_page).','.$per_page;
 		unset($this->request['request']);
 		array_values($this->request);
 		
@@ -168,7 +171,7 @@ class MyAPI extends API
 			}			
 		
 		}
-		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,'',$sort));	
+		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,$limit,$sort));	
 	}
 	
 	public function insertProduct()
