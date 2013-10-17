@@ -16,11 +16,11 @@ class db {
 		}
 	}
 	
-    public function select($table, $fields = '*' , $where = '1=1', $params = array(), $limit = '', $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
+    public function select($table, $fields = '*' , $where = '1=1', $params = array(), $limit = '', $sort, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
 
         //create query
-        $query = "SELECT $fields FROM $table WHERE $where $limit";
-
+        $query = "SELECT $fields FROM $table WHERE $where order by $sort $limit";
+		
         //prepare statement
         $stmt = $this->conn->query($query);
 
