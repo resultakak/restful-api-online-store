@@ -28,6 +28,54 @@ class db {
         return $stmt->fetchAll($fetchStyle);
     }
 	
+	public function insert($table,$params)
+	{
+		$query = "INSERT INTO $table(";
+		
+		$keys=array_keys($params);
+		for($i=0;$i<count($keys);$i++)
+		{
+			$query.= ($i==count($keys)-1)? $keys[$i] : $keys[$i].',';
+		}
+			
+		$query.=") VALUES (";
+		for($i=0;$i<count($keys);$i++)
+		{
+			$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].',';
+		}
+		$query.=")";
+		
+		$stmt = $this->conn->prepare($query);
+        for($i=0;$i<count($keys);$i++)
+		{
+			$stmt->bindParam(':'.$keys[$i], $params[$keys[$i]]);
+		}                            
+		$stmt->execute(); 
+	}
+	
+	public function update($table,$updateParams,$conditionParams)
+	{
+		$query = "UPDATE $table SET ";
+		
+		$keys=array_keys($updateParams);
+		for($i=0;$i<count($keys);$i++)
+		{
+			$query.= $keys[$i];
+			$query.= '=';
+			$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].',';
+		}
+			
+		echo $query.=" where 1=1";
+		
+		$stmt = $this->conn->prepare($query);
+        
+        for($i=0;$i<count($keys);$i++)
+		{
+			$stmt->bindParam(':'.$keys[$i], $updateParams[$keys[$i]]);
+		}                            
+		$stmt->execute(); 
+	}
+	
 	public function delete($table, $where = '1=1', $params = array())
 	{
         //create query

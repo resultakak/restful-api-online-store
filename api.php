@@ -51,9 +51,9 @@ class MyAPI extends API
 				switch($this->method) {
 					case 'GET': $this->getSingleProduct($this->resourceHierarchy[$count-1]);
 								break;
-					case 'POST': echo 'Invalid';
+					case 'POST':echo 'Invalid';
 								break;
-					case 'PUT': echo 'Update a SIngle Product';
+					case 'PUT': $this->updateProduct($this->resourceHierarchy[$count-1]);
 								break;
 					case 'DELETE': $this->deleteSingleProduct($this->resourceHierarchy[$count-1]);
 								break;
@@ -65,7 +65,7 @@ class MyAPI extends API
 				switch($this->method) {
 					case 'GET': $this->getProducts();
 								break;
-					case 'POST': echo 'Create a Product';
+					case 'POST':$this->insertProduct();
 								break;
 					case 'PUT': echo 'Invalid';
 								break;
@@ -158,6 +158,16 @@ class MyAPI extends API
 		}
 		echo json_encode($this->db->select('users',$fields,$where,null,'',$sort));	
 	}
+	
+	public function insertProduct()
+	{
+			$this->db->insert('users',$this->request);
+	}
+	
+	public function updateProduct($product_id)
+	{
+			$this->db->update('users',$this->request);
+	}
 	 
 	 public function sortSerialize($string)
 	 {
@@ -244,5 +254,4 @@ class MyAPI extends API
 		catch (Exception $e) {
     		echo json_encode(Array('error' => $e->getMessage()));
 		}
-		
 ?>
