@@ -82,7 +82,9 @@ class MyAPI extends API
 	 {
 	 	$fields='*';
 	 	$sort='user_id asc';
-		$where="user_id='".$product_id."'";
+		
+		$conditionParamsArray = Array();
+		$conditionParamsArray['user_id']=$product_id;
 		
 		//Checking if the request needs response to be filtered
 	 	if(array_key_exists('fields', $this->request))
@@ -112,17 +114,21 @@ class MyAPI extends API
 		unset($this->request['request']);
 		if(count($this->request)>0)
 		{
-			$where = $where." and ".$this->queryParameterSerialize($this->request);
+			$params_key = array_keys($this->request);
+			for($i=0;$i<count($params_key);$i++)
+			{
+				$conditionParamsArray[$params_key[$i]]=$this->request[$params_key[$i]];
+			}			
 		}
 		
-		echo json_encode($this->db->select('users',$fields,$where,null,'',$sort));	
+		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,'',$sort));	
 	}
 
 	public function getProducts()
 	{
 	    $fields='*';
 	 	$sort='user_id asc ';
-	 	$where='1=1';
+		$conditionParamsArray = Array();
 	 	//Checking if the request needs response to be filtered
 	 	if(array_key_exists('fields', $this->request))
 		{
@@ -154,9 +160,15 @@ class MyAPI extends API
 		
 		if(count($this->request)>0)
 		{
-		$where = $this->queryParameterSerialize($this->request);
+		
+			$params_key = array_keys($this->request);
+			for($i=0;$i<count($params_key);$i++)
+			{
+				$conditionParamsArray[$params_key[$i]]=$this->request[$params_key[$i]];
+			}			
+		
 		}
-		echo json_encode($this->db->select('users',$fields,$where,null,'',$sort));	
+		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,'',$sort));	
 	}
 	
 	public function insertProduct()
@@ -188,21 +200,13 @@ class MyAPI extends API
 			}
 		return $sort;	
 	 }
-	 
-	 public function queryParameterSerialize($array)
-	 {
-	 	$string='';
-		$keys=array_keys($array);
-		for($i=0;$i<count($keys);$i++)
-		{
-			$string = ($i==count($keys)-1) ? $string.$keys[$i]."='".$array[$keys[$i]]."' " : $string.$keys[$i]."='".$array[$keys[$i]]."' and ";
-		}
-		return $string;
-	 }
-	 
+	  
 	 public function deleteSingleProduct($product_id)
 	 {
-		$where="user_id='".$product_id."'";
+		$conditionParamsArray = Array();
+		$conditionParamsArray['user_id']=$product_id;
+		
+		
 		
 		//Checking if the request needs response to be filtered
 	 	if(array_key_exists('fields', $this->request))
@@ -235,15 +239,11 @@ class MyAPI extends API
 			$where = $where." and ".$this->queryParameterSerialize($this->request);
 		}
 		
-		$this->db->delete('users',$where);
+		$this->db->delete('users',$conditionParamsArray);
 		echo json_encode(array('deleted' => "true"));	
 		
 	}
 	 
-	 public function select()
-	 {
-	 	
-	 }
  }
  	try {
  		$db=new db();
