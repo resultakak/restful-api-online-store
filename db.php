@@ -16,7 +16,7 @@ class db {
 		}
 	}
 	
-    public function select($table, $fields = '*' ,  $conditionParams, $limit = '', $sort, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
+    public function select($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
 
         //create query
         $query = "SELECT $fields FROM $table";
@@ -32,8 +32,11 @@ class db {
 				$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].' and ';
 			}
 		}
-		
-		$query.= " order by $sort $limit";
+		if(isset($sort))
+		{
+		$query.= " order by $sort ";
+		}
+		$query.= "$limit";
 		
 		$stmt = $this->conn->prepare($query);
         
