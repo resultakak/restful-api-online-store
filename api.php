@@ -178,7 +178,10 @@ class MyAPI extends API
 	
 	public function updateProduct($product_id)
 	{
-			$this->db->update('users',$this->request);
+		$conditionParamsArray = Array();
+		$conditionParamsArray['user_id']=$product_id;
+		
+		$this->db->update('users',$this->request,$conditionParamsArray);
 	}
 	 
 	 public function sortSerialize($string)

@@ -74,15 +74,15 @@ class db {
 	}
 	
 	public function update($table,$updateParams,$conditionParams)
-	{//pending changes and optimization. duplicate parameters
+	{
 		$query = "UPDATE $table SET ";
 		
 		$keys=array_keys($updateParams);
 		for($i=0;$i<count($keys);$i++)
 		{
 			$query.= $keys[$i];
-			$query.= '=';
-			$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].',';
+			$query.= ' = ';
+			$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].', ';
 		}
 			
 		$query.=" where ";
@@ -91,10 +91,9 @@ class db {
 		for($i=0;$i<count($conditionKeys);$i++)
 		{
 			$query.= $conditionKeys[$i];
-			$query.= '=';
+			$query.= ' = ';
 			$query.= ($i==count($conditionKeys)-1)? ':D'.$conditionKeys[$i] : ':D'.$conditionKeys[$i].' and ';
 		}
-		
 		
 		$stmt = $this->conn->prepare($query);
         
@@ -104,9 +103,9 @@ class db {
 		}                            
 		for($i=0;$i<count($conditionKeys);$i++)
 		{
-			$stmt->bindParam(':D'.$conditionKeys[$i], $conditionParams[$keys[$i]]);
+			$stmt->bindParam(':D'.$conditionKeys[$i], $conditionParams[$conditionKeys[$i]]);
 		}                            
-		
+			
 		$stmt->execute(); 
 	}
 	
@@ -139,7 +138,6 @@ class db {
 		}
 
         $stmt->execute();
-				
 	}
 }
 ?>
