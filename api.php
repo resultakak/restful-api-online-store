@@ -50,21 +50,45 @@ class MyAPI extends API
 		    echo 'Authentication Failed';
 		    exit;
 		} 
-		if(!($this->authorization($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW'])))
+		if(!($this->authorizationUser($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW'])))
 		{
 			header('WWW-Authenticate: Basic realm="Credentials Incorrect."');
 		    header('HTTP/1.0 401 Unauthorized');
 			echo 'Authentication Failed';
 			exit;
-		}   
+		}      
+		if(!($this->authorizationAdmin($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW'])))
+		{
+			header('WWW-Authenticate: Basic realm="Only Administrators allowed"');
+		    header('HTTP/1.0 401 Unauthorized');
+			echo 'Authentication Failed';
+			exit;
+		}
     }
 	 
-	 public function authorization($username,$password)
+	 public function authorizationAdmin($username,$password)
 	 {
 	 	$conditionParams=Array();
 		$conditionParams['username']=$username;
 		$conditionParams['password']=$password;
 		$conditionParams['role']='Administrator';
+	 	$resultArray = $this->db->select('users','*',$conditionParams,'',null);
+		if(count($resultArray)==0)
+		{
+			return false;
+		}
+		else if(count($resultArray)==1)
+		{
+			return true;
+		}
+	 }
+	 
+	 public function authorizationUser($username,$password)
+	 {
+	 	$conditionParams=Array();
+		$conditionParams['username']=$username;
+		$conditionParams['password']=$password;
+		
 	 	$resultArray = $this->db->select('users','*',$conditionParams,'',null);
 		if(count($resultArray)==0)
 		{
