@@ -20,8 +20,7 @@ class db {
 
         //create query
         $query = "SELECT $fields FROM $table WHERE $where order by $sort $limit";
-		
-        //prepare statement
+		//prepare statement
         $stmt = $this->conn->query($query);
 
         $stmt->execute($params);
@@ -40,8 +39,6 @@ class db {
         $stmt->execute($params);
 				
 	}
-	
-	
 	
 }
 ?>

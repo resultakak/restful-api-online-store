@@ -30,7 +30,7 @@ class MyAPI extends API
 
         $this->User = 'hello';*/
     }
-
+	/*
      protected function example() {
         if ($this->method == 'GET') {
             return "Your name is " . $this->User->name;
@@ -38,6 +38,7 @@ class MyAPI extends API
             return "Only accepts GET requests";
         }
      }
+	 */
 	 
 	 public function controllerMain()
 	 {
@@ -80,10 +81,11 @@ class MyAPI extends API
 	 public function getSingleProduct($product_id)
 	 {
 	 	$fields='*';
-	 	$sort='user_id';
+	 	$sort='user_id asc';
 		$where="user_id='".$product_id."'";
 		
-	if(array_key_exists('fields', $this->request))
+		//Checking if the request needs response to be filtered
+	 	if(array_key_exists('fields', $this->request))
 		{
 			$fields=$this->request['fields'];
 			unset($this->request['fields']);
@@ -104,20 +106,22 @@ class MyAPI extends API
 		}
 		if(array_key_exists('per_page', $this->request))
 		{
-			
 			unset($this->request['per_page']);
 		}
 		
 		unset($this->request['request']);
-		
-		$where = $this->queryParameterSerialize($this->request);
-		echo json_encode($this->db->select('users',$fields,$where,null,'',$sort));	
+		if(count($this->request)>0)
+		{
+			$where = $where." and ".$this->queryParameterSerialize($this->request);
 		}
+		
+		echo json_encode($this->db->select('users',$fields,$where,null,'',$sort));	
+	}
 
 	public function getProducts()
 	{
 	    $fields='*';
-	 	$sort='user_id';
+	 	$sort='user_id asc ';
 	 	$where='1=1';
 	 	//Checking if the request needs response to be filtered
 	 	if(array_key_exists('fields', $this->request))
@@ -148,7 +152,10 @@ class MyAPI extends API
 		unset($this->request['request']);
 		array_values($this->request);
 		
+		if(count($this->request)>0)
+		{
 		$where = $this->queryParameterSerialize($this->request);
+		}
 		echo json_encode($this->db->select('users',$fields,$where,null,'',$sort));	
 	}
 	 
@@ -185,9 +192,42 @@ class MyAPI extends API
 	 
 	 public function deleteSingleProduct($product_id)
 	 {
-	 	$fields='*';
+		$where="user_id='".$product_id."'";
 		
-		echo json_encode($this->db->select('users',$fields));
+		//Checking if the request needs response to be filtered
+	 	if(array_key_exists('fields', $this->request))
+		{
+			$fields=$this->request['fields'];
+			unset($this->request['fields']);
+		}
+		
+		//Checking if the request needs response to be sorted
+		if(array_key_exists('sort', $this->request))
+		{
+			$sort = $this->sortSerialize($this->request['sort']);
+			unset($this->request['sort']);
+		}
+		
+		//Checking if the request needs pagination
+		if(array_key_exists('page', $this->request))
+		{	
+			unset($this->request['page']);
+		}
+		
+		if(array_key_exists('per_page', $this->request))
+		{
+			unset($this->request['per_page']);
+		}
+		
+		unset($this->request['request']);
+		if(count($this->request)>0)
+		{
+			$where = $where." and ".$this->queryParameterSerialize($this->request);
+		}
+		
+		$this->db->delete('users',$where);
+		echo json_encode(array('deleted' => "true"));	
+		
 	}
 	 
 	 public function select()
