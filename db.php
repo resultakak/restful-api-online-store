@@ -29,5 +29,19 @@ class db {
         return $stmt->fetchAll($fetchStyle);
     }
 	
+	public function delete($table, $where = '1=1', $params = array())
+	{
+        //create query
+        $query = "DELETE FROM $table WHERE $where";
+		
+        //prepare statement
+        $stmt = $this->conn->query($query);
+
+        $stmt->execute($params);
+				
+	}
+	
+	
+	
 }
 ?>

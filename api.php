@@ -81,40 +81,75 @@ class MyAPI extends API
 	 {
 	 	$fields='*';
 	 	$sort='user_id';
-	 	
-	 	//Checking if the request needs response to be filtered
-	 	if(array_key_exists('fields', $this->request))
+		$where="user_id='".$product_id."'";
+		
+	if(array_key_exists('fields', $this->request))
 		{
 			$fields=$this->request['fields'];
+			unset($this->request['fields']);
 		}
 		
 		//Checking if the request needs response to be sorted
 		if(array_key_exists('sort', $this->request))
 		{
 			$sort = $this->sortSerialize($this->request['sort']);
+			unset($this->request['sort']);
 		}
 		
-		echo json_encode($this->db->select('users',$fields,'1=1',null,'',$sort));
-	}
+		//Checking if the request needs pagination
+		if(array_key_exists('page', $this->request))
+		{
+			
+			unset($this->request['page']);
+		}
+		if(array_key_exists('per_page', $this->request))
+		{
+			
+			unset($this->request['per_page']);
+		}
+		
+		unset($this->request['request']);
+		
+		$where = $this->queryParameterSerialize($this->request);
+		echo json_encode($this->db->select('users',$fields,$where,null,'',$sort));	
+		}
 
 	public function getProducts()
 	{
 	    $fields='*';
 	 	$sort='user_id';
-	 	
+	 	$where='1=1';
 	 	//Checking if the request needs response to be filtered
 	 	if(array_key_exists('fields', $this->request))
 		{
 			$fields=$this->request['fields'];
+			unset($this->request['fields']);
 		}
 		
 		//Checking if the request needs response to be sorted
 		if(array_key_exists('sort', $this->request))
 		{
 			$sort = $this->sortSerialize($this->request['sort']);
+			unset($this->request['sort']);
 		}
 		
-		echo json_encode($this->db->select('users',$fields,'1=1',null,'',$sort));	
+		//Checking if the request needs pagination
+		if(array_key_exists('page', $this->request))
+		{
+			
+			unset($this->request['page']);
+		}
+		if(array_key_exists('per_page', $this->request))
+		{
+			
+			unset($this->request['per_page']);
+		}
+		
+		unset($this->request['request']);
+		array_values($this->request);
+		
+		$where = $this->queryParameterSerialize($this->request);
+		echo json_encode($this->db->select('users',$fields,$where,null,'',$sort));	
 	}
 	 
 	 public function sortSerialize($string)
@@ -135,6 +170,17 @@ class MyAPI extends API
 				}			
 			}
 		return $sort;	
+	 }
+	 
+	 public function queryParameterSerialize($array)
+	 {
+	 	$string='';
+		$keys=array_keys($array);
+		for($i=0;$i<count($keys);$i++)
+		{
+			$string = ($i==count($keys)-1) ? $string.$keys[$i]."='".$array[$keys[$i]]."' " : $string.$keys[$i]."='".$array[$keys[$i]]."' and ";
+		}
+		return $string;
 	 }
 	 
 	 public function deleteSingleProduct($product_id)
