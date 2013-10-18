@@ -31,15 +31,6 @@ class MyAPI extends API
         $this->User = 'hello';*/
         $this->authenticate();
     }
-	/*
-     protected function example() {
-        if ($this->method == 'GET') {
-            return "Your name is " . $this->User->name;
-        } else {
-            return "Only accepts GET requests";
-        }
-     }
-	 */
 	 
 	 public function authenticate()
 	 {
@@ -102,20 +93,22 @@ class MyAPI extends API
 	 
 	 public function controllerMain()
 	 {
-		$count = count($this->resourceHierarchy);
+	 	$resourceHierarchy = explode('/',$this->request['request']);
 		
-		if(is_numeric($this->resourceHierarchy[$count-1]))
+		$count = count($resourceHierarchy);
+		
+		if(is_numeric($resourceHierarchy[$count-1]))
 		{
-			if($this->resourceHierarchy[$count-2]=='products')
+			if($resourceHierarchy[$count-2]=='products')
 			{
 				switch($this->method) {
-					case 'GET': $this->getSingleProduct($this->resourceHierarchy[$count-1]);
+					case 'GET': $this->getSingleProduct($resourceHierarchy[$count-1]);
 								break;
 					case 'POST':echo 'Invalid';
 								break;
-					case 'PUT': $this->updateProduct($this->resourceHierarchy[$count-1]);
+					case 'PUT': $this->updateProduct($resourceHierarchy[$count-1]);
 								break;
-					case 'DELETE': $this->deleteSingleProduct($this->resourceHierarchy[$count-1]);
+					case 'DELETE': $this->deleteSingleProduct($resourceHierarchy[$count-1]);
 								break;
 					default: break;
 				}

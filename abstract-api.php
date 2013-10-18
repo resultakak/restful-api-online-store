@@ -25,7 +25,6 @@ abstract class API
         header("Content-Type: application/json");
 		
 		$this->resource = rtrim($request,'/');
-		$this->resourceHierarchy = explode('/',$request);
 		
 		
 		/*$temp = strpos($request,'?') ? explode('&',end(explode('?',$request))) : null;
