@@ -1,61 +1,45 @@
 <?php
 
-require_once 'abstract-api.php';
-require_once 'db.php';
+require_once 'Abstract-Rest-API.php';
+require_once 'DBWrapper.php';
 
-class MyAPI extends API
+class OnlineStoreAPI extends API
 {
     protected $User;
 	public $conn;
 	private $db;
-    public function __construct($request,$db) {
-       	
-		parent::__construct($request);
+    
+    public function __construct($request,$db) 
+    {
+    	parent::__construct($request);
 		$this->db = $db;
-/*
-        // Abstracted out for example
-        $APIKey = new Models\APIKey();
-        $User = new Models\User();
-
-        if (!array_key_exists('apiKey', $this->request)) {
-            throw new Exception('No API Key provided');
-        } else if (!$APIKey->verifyKey($this->request['apiKey'], $origin)) {
-            throw new Exception('Invalid API Key');
-        } else if (array_key_exists('token', $this->request) &&
-             !$User->get('token', $this->request['token']))
-			{
-            throw new Exception('Invalid User Token');
-			}
-        
-
-        $this->User = 'hello';*/
-        $this->authenticate();
+	
+	    $this->authenticate();
     }
 	 
 	 public function authenticate()
 	 {
 	 	if (!isset($_SERVER['PHP_AUTH_USER'])) 
 	 	{
-		    header('WWW-Authenticate: Basic realm="Please login with Admin Credentials"');
-		    header('HTTP/1.0 401 Unauthorized');
-		    echo 'Authentication Failed';
-		    exit;
+		    $this->authenticateDialog("Please login with admin credentials");
 		} 
 		if(!($this->authorizationUser($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW'])))
 		{
-			header('WWW-Authenticate: Basic realm="Credentials Incorrect."');
-		    header('HTTP/1.0 401 Unauthorized');
-			echo 'Authentication Failed';
-			exit;
+			$this->authenticateDialog("Credentials Incorrect");
 		}      
 		if(!($this->authorizationAdmin($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW'])))
 		{
-			header('WWW-Authenticate: Basic realm="Only Administrators allowed"');
+			$this->authenticateDialog("Only Administrators can do it");	
+		}
+    }
+	 
+	 public function authenticateDialog($realm)
+	 {
+	 	    header('WWW-Authenticate: Basic realm="'.$realm.'")');
 		    header('HTTP/1.0 401 Unauthorized');
 			echo 'Authentication Failed';
 			exit;
-		}
-    }
+	 }
 	 
 	 public function authorizationAdmin($username,$password)
 	 {
@@ -176,11 +160,6 @@ class MyAPI extends API
 			}			
 		}
 		
-		print_r($conditionParamsArray);
-		echo $fields;
-		echo $sort;
-		
-		
 		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,'',$sort));	
 	}
 
@@ -223,14 +202,13 @@ class MyAPI extends API
 		
 		if(count($this->query_params)>0)
 		{
-		
 			$params_key = array_keys($this->query_params);
 			for($i=0;$i<count($params_key);$i++)
 			{
 				$conditionParamsArray[$params_key[$i]]=$this->query_params[$params_key[$i]];
 			}			
-		
 		}
+		
 		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,$limit,$sort));	
 	}
 	
@@ -314,7 +292,7 @@ class MyAPI extends API
  	try {
  		$db=new db();
 		
-        $API = new MyAPI($_REQUEST['request'],$db);
+        $API = new OnlineStoreAPI($_REQUEST['request'],$db);
 		$API->controllerMain();
   //  	echo $API->processAPI();
 		} 
