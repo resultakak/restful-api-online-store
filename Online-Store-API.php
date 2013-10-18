@@ -5,8 +5,7 @@ require_once 'DBWrapper.php';
 
 class OnlineStoreAPI extends AbstractRestAPI
 {
-    protected $User;
-	private $db;
+    private $db;
     
     public function __construct($request,$db) 
     {
@@ -70,16 +69,16 @@ class OnlineStoreAPI extends AbstractRestAPI
 		
 		if(is_numeric($resourceHierarchy[$count-1]))
 		{
-			if($resourceHierarchy[$count-2]=='products')
+			if($resourceHierarchy[$count-2]=='categories')
 			{
 				switch($this->method) {
-					case 'GET': $this->getProducts($resourceHierarchy[$count-1]);
+					case 'GET': $this->getCategories($resourceHierarchy[$count-1]);
 								break;
-					case 'POST': $this->_response(array('error' => "Bad Request"),'400');
+					case 'POST': $this->_response(array('error' => "Method Not Allowed"),'405');
 								break;
-					case 'PUT': $this->updateProduct($resourceHierarchy[$count-1]);
+					case 'PUT': $this->updateCategory($resourceHierarchy[$count-1]);
 								break;
-					case 'DELETE': $this->deleteProduct($resourceHierarchy[$count-1]);
+					case 'DELETE': $this->deleteCategory($resourceHierarchy[$count-1]);
 								break;
 					default: $this->_response(array('error' => "Method not allowed"),'405');
 								break;
@@ -90,16 +89,16 @@ class OnlineStoreAPI extends AbstractRestAPI
 			}
 		}
 		else {
-			if($resourceHierarchy[$count-1]=='products')
+			if($resourceHierarchy[$count-1]=='categories')
 			{
 				switch($this->method) {
-					case 'GET': $this->getProducts();
+					case 'GET': $this->getCategories();
 								break;
-					case 'POST':$this->insertProduct();
+					case 'POST':$this->insertCategory();
 								break;
-					case 'PUT': $this->_response(array('error' => "Bad Request"),'400');
+					case 'PUT': $this->_response(array('error' => "Method not allowed"),'405');
 								break;
-					case 'DELETE': $this->_response(array('error' => "Bad Request"),'400');
+					case 'DELETE': $this->_response(array('error' => "Method not allowed"),'405');
 								break;
 					default: $this->_response(array('error' => "Method not allowed"),'405');
 							break;
@@ -113,17 +112,17 @@ class OnlineStoreAPI extends AbstractRestAPI
 	 }
 	 
 	 
-	public function getProducts($product_id=null)
+	public function getCategories($category_id=null)
 	{
 	    $fields='*';
-	 	$sort='user_id asc ';
+	 	$sort='category_id asc ';
 		$page=1;
 		$per_page=10;
 		
 		$conditionParamsArray = Array();
-		if($product_id!=null)
+		if($category_id!=null)
 		{
-			$conditionParamsArray['user_id']=$product_id;
+			$conditionParamsArray['category_id']=$category_id;
 		}
 		
 	 	//Checking if the request needs response to be filtered
@@ -164,38 +163,51 @@ class OnlineStoreAPI extends AbstractRestAPI
 			}			
 		}
 		
-		$this->_response($this->db->select('users',$fields,$conditionParamsArray,$limit,$sort),'200');	
+		$this->_response($this->db->select('categories',$fields,$conditionParamsArray,$limit,$sort),'200');	
 	}
 	
-	public function insertProduct()
+	public function insertCategory()
 	{
 		$array=json_decode($this->input_file,true);
-		$last_inserted_id = $this->db->insert('users',$array);
+		$last_inserted_id = $this->db->insert('categories',$array);
 		
 		$conditionParamsArray = Array();
-		$conditionParamsArray['user_id']=$last_inserted_id;
+		$conditionParamsArray['category_id']=$last_inserted_id;
 		
-		$this->_response($this->db->select('users','*',$conditionParamsArray,'',null),'201');
+		$this->_response($this->db->select('categories','*',$conditionParamsArray,'',null),'201');
 	}
 	
-	public function updateProduct($product_id)
+	public function updateCategory($category_id)
 	{
 		$array = json_decode($this->input_file,true);
 		
 		$conditionParamsArray = Array();
-		$conditionParamsArray['user_id']=$product_id;
+		$conditionParamsArray['category_id']=$category_id;
 		
-		$this->db->update('users',$array,$conditionParamsArray);
-		$this->_response($this->db->select('users','*',$conditionParamsArray,'',null),'200');
+		$count = $this->db->update('categories',$array,$conditionParamsArray);
+		
+		if($count==0)
+		{
+			$this->_response(array('updated' => "not true"),'200');
+		}
+		else {
+			$this->_response($this->db->select('categories','*',$conditionParamsArray,'',null),'200');
+		}
 	}
 	 
-	 public function deleteProduct($product_id)
+	 public function deleteCategory($category_id)
 	 {
 		$conditionParamsArray = Array();
-		$conditionParamsArray['user_id']=$product_id;
+		$conditionParamsArray['category_id']=$category_id;
 			
-		$this->db->delete('users',$conditionParamsArray);
-		$this->_response(array('deleted' => "true"),'200');
+		$count = $this->db->delete('categories',$conditionParamsArray);
+		
+		if($count==0)
+		$this->_response(array('deleted' => "not true"),'200');
+		else {
+			$this->_response(array('deleted' => "true"),'200');
+		}
+		
 	 }
 	 
 	 public function sortSerialize($string)

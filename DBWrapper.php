@@ -112,6 +112,8 @@ class db {
 		}                            
 			
 		$stmt->execute(); 
+		
+		return $stmt->rowCount();
 	}
 	
 	public function delete($table, $conditionParams)
@@ -143,6 +145,7 @@ class db {
 		}
 
         $stmt->execute();
+		return $stmt->rowCount();
 	}
 }
 ?>
