@@ -9,7 +9,6 @@ abstract class API
      * The Resource requested in the URI. eg: /products/2/categories/1
      */
     protected $resource = '';
-	protected $resourceHierarchy = Array();
 	/**
      * Any query parameters appended with the URL for a PUT Request
      */
@@ -26,19 +25,7 @@ abstract class API
 		
 		$this->resource = rtrim($request,'/');
 		
-		
-		/*$temp = strpos($request,'?') ? explode('&',end(explode('?',$request))) : null;
-		
-		if($temp!=null)
-		{
-        	for($i=0;$i<count($temp);$i++)
-			{
-			$this->query_params[$i][0]=current(explode('=',$temp[$i]));
-			$this->query_params[$i][1]=end(explode('=',$temp[$i]));
-			}
-		}*/
-		
-    	$this->method = $_SERVER['REQUEST_METHOD'];
+		$this->method = $_SERVER['REQUEST_METHOD'];
 		
 		//since PHP is only capable of processing POST and GET and not PUT and DELETE. Try to find another code snippet.
 		if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
@@ -54,19 +41,19 @@ abstract class API
         switch($this->method) {
         case 'DELETE':
         case 'POST':
-            $this->request = $this->_cleanInputs($_POST);
-            break;
+			$this->input_file = file_get_contents("php://input");
+			break;
         case 'GET':
-            $this->request = $this->_cleanInputs($_GET);
+			$this->query_params = $this->_cleanInputs($_GET);
 			break;
         case 'PUT':
-            //$this->request = $this->_cleanInputs($_GET);
-             $this->input_file = file_get_contents("php://input");
-			$this->request = json_decode($this->input_file,true);
+            $this->input_file = file_get_contents("php://input");
 		default:
             $this->_response('Invalid Method', 405);
             break;
         }
+		
+		
    }
 
 	public function processAPI() {

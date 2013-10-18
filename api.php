@@ -93,7 +93,7 @@ class MyAPI extends API
 	 
 	 public function controllerMain()
 	 {
-	 	$resourceHierarchy = explode('/',$this->request['request']);
+	 	$resourceHierarchy = explode('/',$this->resource);
 		
 		$count = count($resourceHierarchy);
 		
@@ -140,39 +140,46 @@ class MyAPI extends API
 		$conditionParamsArray['user_id']=$product_id;
 		
 		//Checking if the request needs response to be filtered
-	 	if(array_key_exists('fields', $this->request))
+	 	if(array_key_exists('fields', $this->query_params))
 		{
-			$fields=$this->request['fields'];
-			unset($this->request['fields']);
+			$fields=$this->query_params['fields'];
+			unset($this->query_params['fields']);
 		}
 		
 		//Checking if the request needs response to be sorted
-		if(array_key_exists('sort', $this->request))
+		if(array_key_exists('sort', $this->query_params))
 		{
-			$sort = $this->sortSerialize($this->request['sort']);
-			unset($this->request['sort']);
+			$sort = $this->sortSerialize($this->query_params['sort']);
+			unset($this->query_params['sort']);
 		}
 		
 		//Checking if the request needs pagination
-		if(array_key_exists('page', $this->request))
+		if(array_key_exists('page', $this->query_params))
 		{
 			
-			unset($this->request['page']);
+			unset($this->query_params['page']);
 		}
-		if(array_key_exists('per_page', $this->request))
+		if(array_key_exists('per_page', $this->query_params))
 		{
-			unset($this->request['per_page']);
+			unset($this->query_params['per_page']);
 		}
 		
-		unset($this->request['request']);
-		if(count($this->request)>0)
+		unset($this->query_params['request']);
+		array_values($this->query_params);
+		
+		if(count($this->query_params)>0)
 		{
-			$params_key = array_keys($this->request);
+			$params_key = array_keys($this->query_params);
 			for($i=0;$i<count($params_key);$i++)
 			{
-				$conditionParamsArray[$params_key[$i]]=$this->request[$params_key[$i]];
+				$conditionParamsArray[$params_key[$i]]=$this->query_params[$params_key[$i]];
 			}			
 		}
+		
+		print_r($conditionParamsArray);
+		echo $fields;
+		echo $sort;
+		
 		
 		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,'',$sort));	
 	}
@@ -186,41 +193,41 @@ class MyAPI extends API
 		
 		$conditionParamsArray = Array();
 	 	//Checking if the request needs response to be filtered
-	 	if(array_key_exists('fields', $this->request))
+	 	if(array_key_exists('fields', $this->query_params))
 		{
-			$fields=$this->request['fields'];
-			unset($this->request['fields']);
+			$fields=$this->query_params['fields'];
+			unset($this->query_params['fields']);
 		}
 		
 		//Checking if the request needs response to be sorted
-		if(array_key_exists('sort', $this->request))
+		if(array_key_exists('sort', $this->query_params))
 		{
-			$sort = $this->sortSerialize($this->request['sort']);
-			unset($this->request['sort']);
+			$sort = $this->sortSerialize($this->query_params['sort']);
+			unset($this->query_params['sort']);
 		}
 		
 		//Checking if the request needs pagination
-		if(array_key_exists('page', $this->request))
+		if(array_key_exists('page', $this->query_params))
 		{
-			$page=$this->request['page'];
-			unset($this->request['page']);
+			$page=$this->query_params['page'];
+			unset($this->query_params['page']);
 		}
-		if(array_key_exists('per_page', $this->request))
+		if(array_key_exists('per_page', $this->query_params))
 		{
-			$per_page=$this->request['per_page'];
-			unset($this->request['per_page']);
+			$per_page=$this->query_params['per_page'];
+			unset($this->query_params['per_page']);
 		}
 		$limit='limit '.(($page-1)*$per_page).','.$per_page;
-		unset($this->request['request']);
-		array_values($this->request);
+		unset($this->query_params['request']);
+		array_values($this->query_params);
 		
-		if(count($this->request)>0)
+		if(count($this->query_params)>0)
 		{
 		
-			$params_key = array_keys($this->request);
+			$params_key = array_keys($this->query_params);
 			for($i=0;$i<count($params_key);$i++)
 			{
-				$conditionParamsArray[$params_key[$i]]=$this->request[$params_key[$i]];
+				$conditionParamsArray[$params_key[$i]]=$this->query_params[$params_key[$i]];
 			}			
 		
 		}
@@ -229,15 +236,17 @@ class MyAPI extends API
 	
 	public function insertProduct()
 	{
-			$this->db->insert('users',$this->request);
+			$array=json_decode($this->input_file,true);
+			$this->db->insert('users',$array);
 	}
 	
 	public function updateProduct($product_id)
 	{
+		$array = json_decode($this->input_file,true);
 		$conditionParamsArray = Array();
 		$conditionParamsArray['user_id']=$product_id;
 		
-		$this->db->update('users',$this->request,$conditionParamsArray);
+		$this->db->update('users',$array,$conditionParamsArray);
 	}
 	 
 	 public function sortSerialize($string)
@@ -265,37 +274,35 @@ class MyAPI extends API
 		$conditionParamsArray = Array();
 		$conditionParamsArray['user_id']=$product_id;
 		
-		
-		
 		//Checking if the request needs response to be filtered
-	 	if(array_key_exists('fields', $this->request))
+	 	if(array_key_exists('fields', $this->query_params))
 		{
-			$fields=$this->request['fields'];
-			unset($this->request['fields']);
+			$fields=$this->query_params['fields'];
+			unset($this->query_params['fields']);
 		}
 		
 		//Checking if the request needs response to be sorted
-		if(array_key_exists('sort', $this->request))
+		if(array_key_exists('sort', $this->query_params))
 		{
-			$sort = $this->sortSerialize($this->request['sort']);
-			unset($this->request['sort']);
+			$sort = $this->sortSerialize($this->query_params['sort']);
+			unset($this->query_params['sort']);
 		}
 		
 		//Checking if the request needs pagination
-		if(array_key_exists('page', $this->request))
+		if(array_key_exists('page', $this->query_params))
 		{	
-			unset($this->request['page']);
+			unset($this->query_params['page']);
 		}
 		
-		if(array_key_exists('per_page', $this->request))
+		if(array_key_exists('per_page', $this->query_params))
 		{
-			unset($this->request['per_page']);
+			unset($this->query_params['per_page']);
 		}
 		
-		unset($this->request['request']);
-		if(count($this->request)>0)
+		unset($this->query_params['request']);
+		if(count($this->query_params)>0)
 		{
-			$where = $where." and ".$this->queryParameterSerialize($this->request);
+			$where = $where." and ".$this->queryParameterSerialize($this->query_params);
 		}
 		
 		$this->db->delete('users',$conditionParamsArray);
@@ -306,6 +313,7 @@ class MyAPI extends API
  }
  	try {
  		$db=new db();
+		
         $API = new MyAPI($_REQUEST['request'],$db);
 		$API->controllerMain();
   //  	echo $API->processAPI();
