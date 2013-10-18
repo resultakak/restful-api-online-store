@@ -1,5 +1,5 @@
 <?php
-abstract class API
+abstract class AbstractRestAPI
 {
 	/**
      * The HTTP method of the request, either GET, POST, PUT or DELETE
@@ -14,7 +14,7 @@ abstract class API
      */
     protected $query_params = Array();
     /**
-     * Stores the input of the PUT request
+     * Stores the input of the POST or the PUT request
      */
     protected $input_file = Null;
 	/**
@@ -52,8 +52,6 @@ abstract class API
             $this->_response('Invalid Method', 405);
             break;
         }
-		
-		
    }
 
 	public function processAPI() {

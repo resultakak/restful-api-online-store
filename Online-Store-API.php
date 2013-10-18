@@ -3,7 +3,7 @@
 require_once 'Abstract-Rest-API.php';
 require_once 'DBWrapper.php';
 
-class OnlineStoreAPI extends API
+class OnlineStoreAPI extends AbstractRestAPI
 {
     protected $User;
 	public $conn;
@@ -86,7 +86,7 @@ class OnlineStoreAPI extends API
 			if($resourceHierarchy[$count-2]=='products')
 			{
 				switch($this->method) {
-					case 'GET': $this->getSingleProduct($resourceHierarchy[$count-1]);
+					case 'GET': $this->getProducts($resourceHierarchy[$count-1]);
 								break;
 					case 'POST':echo 'Invalid';
 								break;
@@ -97,8 +97,13 @@ class OnlineStoreAPI extends API
 					default: break;
 				}
 			}
+			else {
+				
+			}
 		}
 		else {
+			if($resourceHierarchy[$count-1]=='products')
+			{
 				switch($this->method) {
 					case 'GET': $this->getProducts();
 								break;
@@ -111,59 +116,15 @@ class OnlineStoreAPI extends API
 					default: break;
 				}
 		}
-		
+			else {
+				
+			}
+		}
 		die();
 	 }
 	 
-	 public function getSingleProduct($product_id)
-	 {
-	 	$fields='*';
-	 	$sort='user_id asc';
-		
-		$conditionParamsArray = Array();
-		$conditionParamsArray['user_id']=$product_id;
-		
-		//Checking if the request needs response to be filtered
-	 	if(array_key_exists('fields', $this->query_params))
-		{
-			$fields=$this->query_params['fields'];
-			unset($this->query_params['fields']);
-		}
-		
-		//Checking if the request needs response to be sorted
-		if(array_key_exists('sort', $this->query_params))
-		{
-			$sort = $this->sortSerialize($this->query_params['sort']);
-			unset($this->query_params['sort']);
-		}
-		
-		//Checking if the request needs pagination
-		if(array_key_exists('page', $this->query_params))
-		{
-			
-			unset($this->query_params['page']);
-		}
-		if(array_key_exists('per_page', $this->query_params))
-		{
-			unset($this->query_params['per_page']);
-		}
-		
-		unset($this->query_params['request']);
-		array_values($this->query_params);
-		
-		if(count($this->query_params)>0)
-		{
-			$params_key = array_keys($this->query_params);
-			for($i=0;$i<count($params_key);$i++)
-			{
-				$conditionParamsArray[$params_key[$i]]=$this->query_params[$params_key[$i]];
-			}			
-		}
-		
-		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,'',$sort));	
-	}
-
-	public function getProducts()
+	 
+	public function getProducts($product_id=null)
 	{
 	    $fields='*';
 	 	$sort='user_id asc ';
@@ -171,6 +132,11 @@ class OnlineStoreAPI extends API
 		$per_page=10;
 		
 		$conditionParamsArray = Array();
+		if($product_id!=null)
+		{
+			$conditionParamsArray['user_id']=$product_id;
+		}
+		
 	 	//Checking if the request needs response to be filtered
 	 	if(array_key_exists('fields', $this->query_params))
 		{
@@ -251,41 +217,9 @@ class OnlineStoreAPI extends API
 	 {
 		$conditionParamsArray = Array();
 		$conditionParamsArray['user_id']=$product_id;
-		
-		//Checking if the request needs response to be filtered
-	 	if(array_key_exists('fields', $this->query_params))
-		{
-			$fields=$this->query_params['fields'];
-			unset($this->query_params['fields']);
-		}
-		
-		//Checking if the request needs response to be sorted
-		if(array_key_exists('sort', $this->query_params))
-		{
-			$sort = $this->sortSerialize($this->query_params['sort']);
-			unset($this->query_params['sort']);
-		}
-		
-		//Checking if the request needs pagination
-		if(array_key_exists('page', $this->query_params))
-		{	
-			unset($this->query_params['page']);
-		}
-		
-		if(array_key_exists('per_page', $this->query_params))
-		{
-			unset($this->query_params['per_page']);
-		}
-		
-		unset($this->query_params['request']);
-		if(count($this->query_params)>0)
-		{
-			$where = $where." and ".$this->queryParameterSerialize($this->query_params);
-		}
-		
+			
 		$this->db->delete('users',$conditionParamsArray);
 		echo json_encode(array('deleted' => "true"));	
-		
 	}
 	 
  }
