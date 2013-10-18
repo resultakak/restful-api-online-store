@@ -39,7 +39,7 @@ abstract class AbstractRestAPI
         }//till here
 
         switch($this->method) {
-        case 'DELETE':
+        case 'DELETE': break;  
         case 'POST':
 			$this->input_file = file_get_contents("php://input");
 			break;
@@ -48,6 +48,7 @@ abstract class AbstractRestAPI
 			break;
         case 'PUT':
             $this->input_file = file_get_contents("php://input");
+			break;
 		default:
             $this->_response('Invalid Method', 405);
             break;
@@ -55,15 +56,15 @@ abstract class AbstractRestAPI
    }
 
 	public function processAPI() {
-        if ((int)method_exists($this->resource) > 0) {
-            return $this->_response($this->{$this->resource}($this->args));
-        }
-        return $this->_response('', 400);
+			
+           // return $this->_response($this->controllerMain());
+        
+       // return $this->_response('', 400);
     }
 
-    private function _response($data, $status = 200) {
+    protected function _response($data, $status = 200) {
         header("HTTP/1.1 " . $status . " " . $this->_requestStatus($status));
-        return json_encode($data);
+        echo json_encode($data);
     }
 
     private function _cleanInputs($data) {

@@ -75,6 +75,7 @@ class db {
 			$stmt->bindParam(':'.$keys[$i], $params[$keys[$i]]);
 		}                            
 		$stmt->execute(); 
+		return $this->conn->lastInsertId(); 
 	}
 	
 	public function update($table,$updateParams,$conditionParams)

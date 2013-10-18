@@ -6,7 +6,6 @@ require_once 'DBWrapper.php';
 class OnlineStoreAPI extends AbstractRestAPI
 {
     protected $User;
-	public $conn;
 	private $db;
     
     public function __construct($request,$db) 
@@ -48,14 +47,8 @@ class OnlineStoreAPI extends AbstractRestAPI
 		$conditionParams['password']=$password;
 		$conditionParams['role']='Administrator';
 	 	$resultArray = $this->db->select('users','*',$conditionParams,'',null);
-		if(count($resultArray)==0)
-		{
-			return false;
-		}
-		else if(count($resultArray)==1)
-		{
-			return true;
-		}
+		
+		return (count($resultArray)==0) ? false : true;
 	 }
 	 
 	 public function authorizationUser($username,$password)
@@ -65,14 +58,8 @@ class OnlineStoreAPI extends AbstractRestAPI
 		$conditionParams['password']=$password;
 		
 	 	$resultArray = $this->db->select('users','*',$conditionParams,'',null);
-		if(count($resultArray)==0)
-		{
-			return false;
-		}
-		else if(count($resultArray)==1)
-		{
-			return true;
-		}
+		
+		return (count($resultArray)==0) ? false : true;
 	 }
 	 
 	 public function controllerMain()
@@ -88,17 +75,18 @@ class OnlineStoreAPI extends AbstractRestAPI
 				switch($this->method) {
 					case 'GET': $this->getProducts($resourceHierarchy[$count-1]);
 								break;
-					case 'POST':echo 'Invalid';
+					case 'POST': $this->_response(array('error' => "Bad Request"),'400');
 								break;
 					case 'PUT': $this->updateProduct($resourceHierarchy[$count-1]);
 								break;
-					case 'DELETE': $this->deleteSingleProduct($resourceHierarchy[$count-1]);
+					case 'DELETE': $this->deleteProduct($resourceHierarchy[$count-1]);
 								break;
-					default: break;
+					default: $this->_response(array('error' => "Method not allowed"),'405');
+								break;
 				}
 			}
 			else {
-				
+				$this->_response(array('error' => "Bad Request"),'400');		
 			}
 		}
 		else {
@@ -109,15 +97,16 @@ class OnlineStoreAPI extends AbstractRestAPI
 								break;
 					case 'POST':$this->insertProduct();
 								break;
-					case 'PUT': echo 'Invalid';
+					case 'PUT': $this->_response(array('error' => "Bad Request"),'400');
 								break;
-					case 'DELETE': echo 'Invalid';
+					case 'DELETE': $this->_response(array('error' => "Bad Request"),'400');
 								break;
-					default: break;
+					default: $this->_response(array('error' => "Method not allowed"),'405');
+							break;
 				}
 		}
 			else {
-				
+				$this->_response(array('error' => "Bad Request"),'400');
 			}
 		}
 		die();
@@ -175,58 +164,66 @@ class OnlineStoreAPI extends AbstractRestAPI
 			}			
 		}
 		
-		echo json_encode($this->db->select('users',$fields,$conditionParamsArray,$limit,$sort));	
+		$this->_response($this->db->select('users',$fields,$conditionParamsArray,$limit,$sort),'200');	
 	}
 	
 	public function insertProduct()
 	{
-			$array=json_decode($this->input_file,true);
-			$this->db->insert('users',$array);
+		$array=json_decode($this->input_file,true);
+		$last_inserted_id = $this->db->insert('users',$array);
+		
+		$conditionParamsArray = Array();
+		$conditionParamsArray['user_id']=$last_inserted_id;
+		
+		$this->_response($this->db->select('users','*',$conditionParamsArray,'',null),'201');
 	}
 	
 	public function updateProduct($product_id)
 	{
 		$array = json_decode($this->input_file,true);
+		
 		$conditionParamsArray = Array();
 		$conditionParamsArray['user_id']=$product_id;
 		
 		$this->db->update('users',$array,$conditionParamsArray);
+		$this->_response($this->db->select('users','*',$conditionParamsArray,'',null),'200');
 	}
+	 
+	 public function deleteProduct($product_id)
+	 {
+		$conditionParamsArray = Array();
+		$conditionParamsArray['user_id']=$product_id;
+			
+		$this->db->delete('users',$conditionParamsArray);
+		$this->_response(array('deleted' => "true"),'200');
+	 }
 	 
 	 public function sortSerialize($string)
 	 {
 	 	$sort='';
 		$temp=explode(',',$string);
 			
-			for($i=0;$i<count($temp);$i++)
+		for($i=0;$i<count($temp);$i++)
+		{
+			$temp2 = str_split($temp[$i]);
+			if($temp2[0]=='-')
 			{
-				$temp2 = str_split($temp[$i]);
-				if($temp2[0]=='-')
-				{
-					array_shift($temp2);
-					$sort = ($i==count($temp)-1) ? $sort.implode($temp2).' desc' : $sort.implode($temp2).' desc,';
-				}	
-				else {
-					$sort = ($i==count($temp)-1) ? $sort.implode($temp2).' asc' : $sort.implode($temp2).' asc,';
-				}			
-			}
+				array_shift($temp2);
+				$sort = ($i==count($temp)-1) ? $sort.implode($temp2).' desc' : $sort.implode($temp2).' desc,';
+			}	
+			else 
+			{
+				$sort = ($i==count($temp)-1) ? $sort.implode($temp2).' asc' : $sort.implode($temp2).' asc,';
+			}			
+		}
 		return $sort;	
 	 }
-	  
-	 public function deleteSingleProduct($product_id)
-	 {
-		$conditionParamsArray = Array();
-		$conditionParamsArray['user_id']=$product_id;
-			
-		$this->db->delete('users',$conditionParamsArray);
-		echo json_encode(array('deleted' => "true"));	
-	}
 	 
  }
+
  	try {
  		$db=new db();
-		
-        $API = new OnlineStoreAPI($_REQUEST['request'],$db);
+	    $API = new OnlineStoreAPI($_REQUEST['request'],$db);
 		$API->controllerMain();
   //  	echo $API->processAPI();
 		} 
