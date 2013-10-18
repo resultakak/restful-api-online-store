@@ -4,6 +4,6 @@ RewriteBase /online-store/
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ api.php?request=$1 [QSA,L]
+RewriteRule ^(.*)$ Online-Store-API.php?request=$1 [QSA,L]
 
 </IfModule>
