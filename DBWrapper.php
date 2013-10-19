@@ -1,8 +1,10 @@
 <?php
+
+
 class db {
 
     public $conn; //PDO
-	
+	public $memcache;
 	public function __construct()
 	{
 		try 
@@ -14,6 +16,10 @@ class db {
 	 	{
      	echo 'ERROR: ' . $e->getMessage();
 		}
+        
+        $this->memcache = new Memcache; 
+        $this->memcache->connect("localhost",11211);  
+    
 	}
 	
 	public function getPrimaryKey($table)
@@ -45,11 +51,56 @@ class db {
 		}
 	}
 	
+    public function memcacheSelect($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC)
+    {
+        $query_memcache = "SELECT $fields FROM $table";
+        
+            if(count($conditionParams)>0)
+            {
+                $query_memcache.= " WHERE "; 
+                $keys=array_keys($conditionParams);
+                for($i=0;$i<count($keys);$i++)
+                {
+                    $query_memcache.= $keys[$i];
+                    $query_memcache.= ' = ';
+                    $query_memcache.= ($i==count($keys)-1)? "'".$conditionParams[$keys[$i]]."'" : "'".$conditionParams[$keys[$i]]."'".' and ';
+                }
+            }
+            
+            if(isset($sort))
+            {
+            $query_memcache.= " order by $sort ";
+            }
+            $query_memcache.= "$limit";
+            return $query_memcache;
+    }
+    
     public function select($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
-
+        
+        $query_memcache = $this->memcacheSelect($table, $fields, $conditionParams, $limit, $sort, $fetchStyle);
+        
+        //Exact Match
+        if($memcache->get(md5($query_memcache)))
+        {
+           $result =  $memcache->get(md5($query_memcache));
+           return $result;
+        }
+        else {
+            if($fields!='*')
+            {
+                $query_memcache_subset = $this->memcacheSelect($table, '*', $conditionParams, $limit, $sort, $fetchStyle);
+                if($memcache->get(md5($query_memcache_subset)))
+                {
+                    $result =  $memcache->get(md5($query_memcache_subset));
+                    return $result;
+                }
+            }
+        }
+        
+        $successful_execute=false;
         //create query
         $query = "SELECT $fields FROM $table";
-		
+        
 		if(count($conditionParams)>0)
 		{
 			$query.= " WHERE "; 
@@ -61,6 +112,7 @@ class db {
 				$query.= ($i==count($keys)-1)? ':'.$keys[$i] : ':'.$keys[$i].' and ';
 			}
 		}
+		
 		if(isset($sort))
 		{
 		$query.= " order by $sort ";
@@ -77,8 +129,19 @@ class db {
 			}                            
 		}
 		
-		$stmt->execute();
-        return $stmt->fetchAll($fetchStyle);
+		if($stmt->execute())
+        {
+            $successful_execute = true;
+         }
+        
+        $result = $stmt->fetchAll($fetchStyle);
+        
+        if($successful_execute)
+        {
+            $query_memcache = $this->memcacheSelect($table, $fields, $conditionParams, $limit, $sort, $fetchStyle);
+            $this->memcache->add(md5($query_memcache), $result, 3000);
+        }
+        return $result;
     }
 	
 	public function insert($table,$params)
