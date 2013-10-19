@@ -106,6 +106,7 @@ class db {
                     }
                     
                     array_values($result);
+                    $this->memcache->add(md5($query_memcache), $result,false, 60);
                     return $result;
                 }
             }
@@ -137,10 +138,12 @@ class db {
         
 		if(count($conditionParams)>0)
 		{
+		    $keys=array_keys($conditionParams);
+            
 			for($i=0;$i<count($keys);$i++)
 			{
-				$stmt->bindParam(':'.$keys[$i], $conditionParams[$keys[$i]]);
-			}                            
+			    $stmt->bindParam(':'.$keys[$i], $conditionParams[$keys[$i]]);
+        	}                            
 		}
 		
 		if($stmt->execute())
@@ -179,10 +182,12 @@ class db {
         for($i=0;$i<count($keys);$i++)
 		{
 			$stmt->bindParam(':'.$keys[$i], $params[$keys[$i]]);
-		}                            
+		}
+                                    
 		$stmt->execute(); 
-		return $this->conn->lastInsertId(); 
-	}
+		return $this->conn->lastInsertId();
+        
+    }
 	
 	public function update($table,$updateParams,$conditionParams)
 	{

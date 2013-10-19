@@ -145,7 +145,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 	public function getResources($id=null)
 	{
 	    $fields='*';
-	 	$sort=$this->resourceDatabase->primarykey_field.' asc ';
+	 	$sort=$this->resourceDatabase->primarykey_field.' asc';
 		$page=1;
 		$per_page=10;
 		
@@ -211,7 +211,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 		$conditionParamsArray = Array();
 		$conditionParamsArray[$this->resourceDatabase->primarykey_field]=$last_inserted_id;
 		
-		$this->_response($this->db->select($this->resourceDatabase->TableName,'*',$conditionParamsArray,'',null),'201');
+		$this->_response($this->db->select($this->resourceDatabase->TableName,'*',$conditionParamsArray,'limit 0,10',$this->resourceDatabase->primarykey_field.' asc'),'201');
 	}
 	
 	
@@ -237,8 +237,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 			
 			if($count>0)
 			{
-			    
-			    $this->_response($this->db->select($this->resourceDatabase->TableName,'*',$conditionParamsArray,'',null),'200');
+			 $this->_response($this->db->select($this->resourceDatabase->TableName,'*',$conditionParamsArray,'limit 0,10',$this->resourceDatabase->primarykey_field.' asc'),'200');
 			}
 			else 
 			{
