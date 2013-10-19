@@ -1,22 +1,27 @@
 <?php
 
-//including the abstract Rest Api and DB Wrapper
+//including the Abstract Rest API and DB Wrapper class files
 require_once 'Abstract-Rest-API.php';
 require_once 'DBWrapper.php';
+require_once 'resource.php';
 
+//extending class AbstractRestAPI
 class OnlineStoreAPI extends AbstractRestAPI
 {
+	//Database object
     private $db;
-    
+    private $resourceDatabase;
+	
 	//Constructor
-    public function __construct($request,$db) 
+    public function __construct($request,$db,$resourceDatabase) 
     {
     	//Calling the parent constructor
     	parent::__construct($request);
 		
 		//Assigning the database parameter object to its own local database object
 		$this->db = $db;
-	
+		$this->resourceDatabase = $resourceDatabase;
+		
 		//calling the authenticate function to authenticate the user
 	    $this->authenticate();
     }
@@ -78,7 +83,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 	 
 	 public function controllerMain()
 	 {
-	 	//Converts the resource to a resource hierarchy array
+	 	//Generates a resource hierarchy array from the resource string 
 	 	//Example:- /categories/2 to Array([0]->categories,[1]->2)
 	 	$resourceHierarchy = explode('/',$this->resource);
 		
@@ -89,17 +94,17 @@ class OnlineStoreAPI extends AbstractRestAPI
 		if(is_numeric($resourceHierarchy[$count-1]))
 		{
 			//Checking whether the request made is for which resource of which collection
-			if($resourceHierarchy[$count-2]=='categories')
+			if($resourceHierarchy[$count-2]==$this->resourceDatabase->TableName)
 			{
 				switch($this->method) {
-					case 'GET': $this->getCategories($resourceHierarchy[$count-1]);
+					case 'GET': $this->getResources($resourceHierarchy[$count-1]);
 								break;
 					case 'POST'://POST Method not applicable on a specified resource 
-								$this->_response(array('error' => "Method Not Allowed"),'405');
+								$this->_response(array('error' => "Method Not Allowed on a Resource"),'405');
 								break;
-					case 'PUT': $this->updateCategory($resourceHierarchy[$count-1]);
+					case 'PUT': $this->updateResource($resourceHierarchy[$count-1]);
 								break;
-					case 'DELETE': $this->deleteCategory($resourceHierarchy[$count-1]);
+					case 'DELETE': $this->deleteResource($resourceHierarchy[$count-1]);
 								break;
 					default: $this->_response(array('error' => "Method not allowed"),'405');
 								break;
@@ -112,18 +117,18 @@ class OnlineStoreAPI extends AbstractRestAPI
 		//The below else statement will match a request made for a collection
 		else {
 			//Checking request is made for which collection
-			if($resourceHierarchy[$count-1]=='categories')
+			if($resourceHierarchy[$count-1]==$this->resourceDatabase->TableName)
 			{
 				switch($this->method) {
-					case 'GET': 	$this->getCategories();
+					case 'GET': 	$this->getResources();
 									break;
-					case 'POST':	$this->insertCategory();
+					case 'POST':	$this->insertResource();
 									break;
 					case 'PUT': 	//PUT Method not applicable on a collection
-									$this->_response(array('error' => "Method not allowed"),'405');
+									$this->_response(array('error' => "Method not allowed on a collection"),'405');
 									break;
 					case 'DELETE':  //Delete method not applicable on a collection 
-								    $this->_response(array('error' => "Method not allowed"),'405');
+								    $this->_response(array('error' => "Method not allowed on a collection"),'405');
 								    break;
 					default: 		$this->_response(array('error' => "Method not allowed"),'405');
 									break;
@@ -137,17 +142,17 @@ class OnlineStoreAPI extends AbstractRestAPI
 	 }
 	 
 	//Function to get and display resource data according to certain criteria
-	public function getCategories($category_id=null)
+	public function getResources($id=null)
 	{
 	    $fields='*';
-	 	$sort='category_id asc ';
+	 	$sort=$this->resourceDatabase->primarykey_field.' asc ';
 		$page=1;
 		$per_page=10;
 		
 		$conditionParamsArray = Array();
-		if($category_id!=null)
+		if($id!=null)
 		{
-			$conditionParamsArray['category_id']=$category_id;
+			$conditionParamsArray[$this->resourceDatabase->primarykey_field]=$id;
 		}
 		
 	 	//Checking if the request needs response to be filtered
@@ -194,38 +199,46 @@ class OnlineStoreAPI extends AbstractRestAPI
 			}			
 		}
 		
-		$this->_response($this->db->select('categories',$fields,$conditionParamsArray,$limit,$sort),'200');	
+		$this->_response($this->db->select($this->resourceDatabase->TableName,$fields,$conditionParamsArray,$limit,$sort),'200');	
 	}
 	
 	//Function to insert the resource
-	public function insertCategory()
+	public function insertResource()
 	{
 		$array=json_decode($this->input_file,true);
-		$last_inserted_id = $this->db->insert('categories',$array);
+		$last_inserted_id = $this->db->insert($this->resourceDatabase->TableName,$array);
 		
 		$conditionParamsArray = Array();
-		$conditionParamsArray['category_id']=$last_inserted_id;
+		$conditionParamsArray[$this->resourceDatabase->primarykey_field]=$last_inserted_id;
 		
-		$this->_response($this->db->select('categories','*',$conditionParamsArray,'',null),'201');
+		$this->_response($this->db->select($this->resourceDatabase->TableName,'*',$conditionParamsArray,'',null),'201');
 	}
 	
 	
 	//Function to update a resource
-	public function updateCategory($category_id)
+	public function updateResource($id)
 	{
+	    $array = json_decode($this->input_file,true);
+        
+        if($array[$this->resourceDatabase->primarykey_field]!=$id)
+        {
+                $this->_response(array('error' => "Bad Request"),'400');
+                exit;
+        }
+        
 		$conditionParamsArray = Array();
-		$conditionParamsArray['category_id']=$category_id;
+		$conditionParamsArray[$this->resourceDatabase->primarykey_field]=$id;
 		
-		$arrays = $this->db->select('categories','*',$conditionParamsArray,'',null);
+		$arrays = $this->db->select($this->resourceDatabase->TableName,'*',$conditionParamsArray,'',null);
 		if(count($arrays)>0)
 		{
-			$array = json_decode($this->input_file,true);
 			
-			$count = $this->db->update('categories',$array,$conditionParamsArray);
+			$count = $this->db->update($this->resourceDatabase->TableName,$array,$conditionParamsArray);
 			
 			if($count>0)
 			{
-				$this->_response($this->db->select('categories','*',$conditionParamsArray,'',null),'200');
+			    
+			    $this->_response($this->db->select($this->resourceDatabase->TableName,'*',$conditionParamsArray,'',null),'200');
 			}
 			else 
 			{
@@ -238,15 +251,15 @@ class OnlineStoreAPI extends AbstractRestAPI
 	}
 	 
 	 //Function to delete a resource. 
-	 public function deleteCategory($category_id)
+	 public function deleteResource($id)
 	 {
 		$conditionParamsArray = Array();
-		$conditionParamsArray['category_id']=$category_id;
+		$conditionParamsArray[$this->resourceDatabase->primarykey_field]=$id;
 			
-		$arrays = $this->db->select('categories','*',$conditionParamsArray,'',null);
+		$arrays = $this->db->select($this->resourceDatabase->TableName,'*',$conditionParamsArray,'',null);
 		if(count($arrays)>0)
 		{
-			$count = $this->db->delete('categories',$conditionParamsArray);
+			$count = $this->db->delete($this->resourceDatabase->TableName,$conditionParamsArray);
 			
 			if($count==0)
 			{
@@ -288,7 +301,8 @@ class OnlineStoreAPI extends AbstractRestAPI
 
  	try {
  		$db=new db();
-	    $API = new OnlineStoreAPI($_REQUEST['request'],$db);
+		$r1 = new Resource('categories',$db);
+	    $API = new OnlineStoreAPI($_REQUEST['request'],$db,$r1);
 		$API->controllerMain();
   //  	echo $API->processAPI();
 		} 

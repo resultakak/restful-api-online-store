@@ -99,7 +99,6 @@ abstract class AbstractRestAPI
 			{
 				return $status[500];
 			}
-        
-	}
+    }
 }
 ?>

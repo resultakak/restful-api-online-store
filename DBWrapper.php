@@ -16,6 +16,35 @@ class db {
 		}
 	}
 	
+	public function getPrimaryKey($table)
+	{
+		try
+		{
+			$stmt = $this->conn->prepare("SHOW KEYS FROM $table WHERE Key_name =  'PRIMARY'");
+			$stmt->execute();
+			$array = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			return $array[0]['Column_name'];
+		}
+		catch(PDOException $e)
+		{
+			echo 'ERROR: ' . $e->getMessage();
+		}
+	}
+	
+	public function getFields($table)
+	{
+		try
+		{
+			$stmt = $this->conn->prepare("DESCRIBE $table");
+			$stmt->execute();
+			return $stmt->fetchAll(PDO::FETCH_COLUMN);
+		}
+		catch(PDOException $e)
+		{
+			echo 'ERROR: ' . $e->getMessage();
+		}
+	}
+	
     public function select($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
 
         //create query
@@ -80,7 +109,7 @@ class db {
 	
 	public function update($table,$updateParams,$conditionParams)
 	{
-		$query = "UPDATE $table SET ";
+	    $query = "UPDATE $table SET ";
 		
 		$keys=array_keys($updateParams);
 		for($i=0;$i<count($keys);$i++)
