@@ -1,5 +1,6 @@
 <?php
 
+//including the abstract Rest Api and DB Wrapper
 require_once 'Abstract-Rest-API.php';
 require_once 'DBWrapper.php';
 
@@ -7,29 +8,40 @@ class OnlineStoreAPI extends AbstractRestAPI
 {
     private $db;
     
+	//Constructor
     public function __construct($request,$db) 
     {
+    	//Calling the parent constructor
     	parent::__construct($request);
+		
+		//Assigning the database parameter object to its own local database object
 		$this->db = $db;
 	
+		//calling the authenticate function to authenticate the user
 	    $this->authenticate();
     }
 	 
 	 public function authenticate()
 	 {
+	 	//checking whether authentication credentials have been entered or not
 	 	if (!isset($_SERVER['PHP_AUTH_USER'])) 
 	 	{
 		    $this->authenticateDialog("Please login with admin credentials");
 		} 
+		
+		//checking whether the user exists in the database
 		if(!($this->authorizationUser($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW'])))
 		{
 			$this->authenticateDialog("Credentials Incorrect");
 		}      
+		
+		//checking whether the user logged in has administrative rights
 		if(!($this->authorizationAdmin($_SERVER['PHP_AUTH_USER'],$_SERVER['PHP_AUTH_PW'])))
 		{
 			$this->authenticateDialog("Only Administrators can do it");	
 		}
     }
+	 
 	 
 	 public function authenticateDialog($realm)
 	 {
@@ -39,17 +51,20 @@ class OnlineStoreAPI extends AbstractRestAPI
 			exit;
 	 }
 	 
+	 //function for checking whether the user has administrative rights or not
 	 public function authorizationAdmin($username,$password)
 	 {
 	 	$conditionParams=Array();
 		$conditionParams['username']=$username;
 		$conditionParams['password']=$password;
 		$conditionParams['role']='Administrator';
+		
 	 	$resultArray = $this->db->select('users','*',$conditionParams,'',null);
 		
 		return (count($resultArray)==0) ? false : true;
 	 }
 	 
+	 //function for checking whether the user exists in the database
 	 public function authorizationUser($username,$password)
 	 {
 	 	$conditionParams=Array();
@@ -63,18 +78,24 @@ class OnlineStoreAPI extends AbstractRestAPI
 	 
 	 public function controllerMain()
 	 {
+	 	//Converts the resource to a resource hierarchy array
+	 	//Example:- /categories/2 to Array([0]->categories,[1]->2)
 	 	$resourceHierarchy = explode('/',$this->resource);
 		
+		//Storing count of elements in array in variable $count
 		$count = count($resourceHierarchy);
 		
+		//Checking whether the request is made for a resource or a collection. The Below If statement will match a Resource
 		if(is_numeric($resourceHierarchy[$count-1]))
 		{
+			//Checking whether the request made is for which resource of which collection
 			if($resourceHierarchy[$count-2]=='categories')
 			{
 				switch($this->method) {
 					case 'GET': $this->getCategories($resourceHierarchy[$count-1]);
 								break;
-					case 'POST': $this->_response(array('error' => "Method Not Allowed"),'405');
+					case 'POST'://POST Method not applicable on a specified resource 
+								$this->_response(array('error' => "Method Not Allowed"),'405');
 								break;
 					case 'PUT': $this->updateCategory($resourceHierarchy[$count-1]);
 								break;
@@ -88,20 +109,24 @@ class OnlineStoreAPI extends AbstractRestAPI
 				$this->_response(array('error' => "Bad Request"),'400');		
 			}
 		}
+		//The below else statement will match a request made for a collection
 		else {
+			//Checking request is made for which collection
 			if($resourceHierarchy[$count-1]=='categories')
 			{
 				switch($this->method) {
-					case 'GET': $this->getCategories();
-								break;
-					case 'POST':$this->insertCategory();
-								break;
-					case 'PUT': $this->_response(array('error' => "Method not allowed"),'405');
-								break;
-					case 'DELETE': $this->_response(array('error' => "Method not allowed"),'405');
-								break;
-					default: $this->_response(array('error' => "Method not allowed"),'405');
-							break;
+					case 'GET': 	$this->getCategories();
+									break;
+					case 'POST':	$this->insertCategory();
+									break;
+					case 'PUT': 	//PUT Method not applicable on a collection
+									$this->_response(array('error' => "Method not allowed"),'405');
+									break;
+					case 'DELETE':  //Delete method not applicable on a collection 
+								    $this->_response(array('error' => "Method not allowed"),'405');
+								    break;
+					default: 		$this->_response(array('error' => "Method not allowed"),'405');
+									break;
 				}
 		}
 			else {
@@ -111,7 +136,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 		die();
 	 }
 	 
-	 
+	//Function to get and display resource data according to certain criteria
 	public function getCategories($category_id=null)
 	{
 	    $fields='*';
@@ -145,13 +170,19 @@ class OnlineStoreAPI extends AbstractRestAPI
 			$page=$this->query_params['page'];
 			unset($this->query_params['page']);
 		}
+		
+		//Checking if the request needs pagination
 		if(array_key_exists('per_page', $this->query_params))
 		{
 			$per_page=$this->query_params['per_page'];
 			unset($this->query_params['per_page']);
 		}
+		
 		$limit='limit '.(($page-1)*$per_page).','.$per_page;
+		if(array_key_exists('request', $this->query_params))
+		{
 		unset($this->query_params['request']);
+		}
 		array_values($this->query_params);
 		
 		if(count($this->query_params)>0)
@@ -166,6 +197,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 		$this->_response($this->db->select('categories',$fields,$conditionParamsArray,$limit,$sort),'200');	
 	}
 	
+	//Function to insert the resource
 	public function insertCategory()
 	{
 		$array=json_decode($this->input_file,true);
@@ -177,39 +209,60 @@ class OnlineStoreAPI extends AbstractRestAPI
 		$this->_response($this->db->select('categories','*',$conditionParamsArray,'',null),'201');
 	}
 	
+	
+	//Function to update a resource
 	public function updateCategory($category_id)
 	{
-		$array = json_decode($this->input_file,true);
-		
 		$conditionParamsArray = Array();
 		$conditionParamsArray['category_id']=$category_id;
 		
-		$count = $this->db->update('categories',$array,$conditionParamsArray);
-		
-		if($count==0)
+		$arrays = $this->db->select('categories','*',$conditionParamsArray,'',null);
+		if(count($arrays)>0)
 		{
-			$this->_response(array('updated' => "not true"),'200');
+			$array = json_decode($this->input_file,true);
+			
+			$count = $this->db->update('categories',$array,$conditionParamsArray);
+			
+			if($count>0)
+			{
+				$this->_response($this->db->select('categories','*',$conditionParamsArray,'',null),'200');
+			}
+			else 
+			{
+				$this->_response(array('error' => "resource could not get updated"),'200');
+			}
 		}
 		else {
-			$this->_response($this->db->select('categories','*',$conditionParamsArray,'',null),'200');
+			$this->_response(array('resource' => "not found"),'404');
 		}
 	}
 	 
+	 //Function to delete a resource. 
 	 public function deleteCategory($category_id)
 	 {
 		$conditionParamsArray = Array();
 		$conditionParamsArray['category_id']=$category_id;
 			
-		$count = $this->db->delete('categories',$conditionParamsArray);
-		
-		if($count==0)
-		$this->_response(array('deleted' => "not true"),'200');
-		else {
-			$this->_response(array('deleted' => "true"),'200');
+		$arrays = $this->db->select('categories','*',$conditionParamsArray,'',null);
+		if(count($arrays)>0)
+		{
+			$count = $this->db->delete('categories',$conditionParamsArray);
+			
+			if($count==0)
+			{
+			$this->_response(array('error' => "could not get deleted"),'200');
+			}
+			else 
+			{
+				$this->_response(array('deleted' => "true"),'200');
+			}
 		}
-		
-	 }
+		else {
+			$this->_response(array('resource' => "not found"),'404');
+		}
+	}
 	 
+	 //Converts query parameter sort='id,-name' to the format 'id asc, name desc' so that the string can be parsed in an 'order by' clause in SQL.
 	 public function sortSerialize($string)
 	 {
 	 	$sort='';
