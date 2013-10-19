@@ -23,7 +23,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 		$this->resourceDatabase = $resourceDatabase;
 		
 		//calling the authenticate function to authenticate the user
-	    $this->authenticate();
+	    //$this->authenticate();
     }
 	 
 	 public function authenticate()
