@@ -3,6 +3,10 @@ Documentation - Online Restful API Implementation for an Online Store
 Database Name - 'online-store'
 Memcache Port - '11211'
 
+User Access Credentials for Administrator Access
+Username: kanishk
+Password: password
+
 Database configuration constants can be changed in DBConfig.php
 
 Please import the db.sql file present in the repository in PHPMYADMIN.
