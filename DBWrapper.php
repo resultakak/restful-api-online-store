@@ -215,6 +215,7 @@ class DBWrapper {
 		
         //Fetching and appending the names of parameters
         //in the format "insert into table(name,description,parent_id)
+        $keys = array_keys($params);
 		for($i=0;$i<count($keys);$i++)
 		{
 			$query.= ($i==count($keys)-1)? $keys[$i] : $keys[$i].',';

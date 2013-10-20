@@ -164,6 +164,15 @@ class OnlineStoreAPI extends AbstractRestAPI
 		if($id!=null)
 		{
 			$conditionParamsArray[$this->resourceData->primarykey_field]=$id;
+            
+            //Calling the select function to check whether the given record exists or not.
+            $array = $this->db->select($this->resourceData->TableName,'*',$conditionParamsArray,'',null);
+            if(count($array)==0)
+            {
+                $this->_response(array('error' => "resource not found"),'404');
+                exit;    
+            }
+            
 		}
 		
 	 	//Checking if the request needs response to be filtered
@@ -315,7 +324,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 			}
 		}
 		else {
-			$this->_response(array('resource' => "not found"),'404');
+			$this->_response(array('error' => "resource not found"),'404');
 		}
 	}
 }

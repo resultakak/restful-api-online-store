@@ -1,0 +1,10 @@
+Documentation - Online Restful API Implementation for an Online Store
+
+Database Name - 'online-store'
+Memcache Port - '11211'
+
+Database configuration constants can be changed in DBConfig.php
+
+Please import the db.sql file present in the repository in PHPMYADMIN.
+
+Test Cases and the API design can be accessed via the GITHUB repository.
