@@ -1,25 +1,22 @@
 <?php
+
+require_once 'APIUtil.php';
+
 abstract class AbstractRestAPI
 {
-	/**
-     * The HTTP method of the request, either GET, POST, PUT or DELETE
-     */
+	// The HTTP method of the request, either GET, POST, PUT or DELETE
     protected $method = '';
-    /**
-     * The Resource requested in the URI. eg: /products/2/categories/1
-     */
+    
+    // The Resource requested in the URI. eg: /products/2/categories/1
     protected $resource = '';
-	/**
-     * Any query parameters appended with the URL for a PUT Request
-     */
+	
+    // Any query parameters appended with the URL for a PUT Request
     protected $query_params = Array();
-    /**
-     * Stores the input of the POST or the PUT request
-     */
+    
+    //Stores the input file of the POST or the PUT request
     protected $input_file = Null;
-	/**
-     * Constructor: __construct
-     */
+	
+     //Constructor
     public function __construct($request) {
         header("Content-Type: application/json");
 		
@@ -36,50 +33,41 @@ abstract class AbstractRestAPI
             } else {
                 throw new Exception("Unexpected Header");
             }
-        }//till here
+        }
 
         switch($this->method) {
-        case 'DELETE': break;  
-        case 'POST':
-			$this->input_file = file_get_contents("php://input");
-			break;
-        case 'GET':
-			$this->query_params = $this->_cleanInputs($_GET);
-			break;
-        case 'PUT':
-            $this->input_file = file_get_contents("php://input");
-			break;
-		default:
-            $this->_response('Invalid Method', 405);
-            break;
+        case 'DELETE': //Breaking in case DELETE is method since resource ID can be fetched from the URL. Query parameters or input file not needed
+                       break;  
+        case 'POST':   //Storing JSON input into input_file variable
+			           $this->input_file = file_get_contents("php://input");
+			           break;
+        case 'GET':    //Storing $_GET query parameters into query_params variable
+			           $this->query_params = APIUtils::sanitizeInputs($_GET);
+			           break;
+        case 'PUT':    //Storing JSON input into input_file variable
+                       $this->input_file = file_get_contents("php://input");
+			           break;
+		default:       $this->_response('Invalid Method', 405);
+                       break;
         }
    }
-
-	public function processAPI() {
-			
-           // return $this->_response($this->controllerMain());
-        
-       // return $this->_response('', 400);
+    
+    //Controller function of the Abstract API. Calls the main controller function of the extended class
+	public function processAPI() 
+	{
+	       $this->controllerMain();
     }
 
-    protected function _response($data, $status = 200) {
-        header("HTTP/1.1 " . $status . " " . $this->_requestStatus($status));
+    //Function to output response
+    protected function _response($data, $status = 200) 
+    {
+        header("HTTP/1.1 " . $status . " " . $this->getStatusMessage($status));
         echo json_encode($data);
     }
-
-    private function _cleanInputs($data) {
-        $clean_input = Array();
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
-                $clean_input[$key] = $this->_cleanInputs($value);
-            }
-        } else {
-            $clean_input = trim(strip_tags($data));
-        }
-        return $clean_input;
-    }
-
-    private function _requestStatus($code) {
+    
+    //Function to return the status message according to the Status Code
+    private function getStatusMessage($code) 
+    {
         $status = array( 
             200 => 'OK', 
             201 => 'Created',   
@@ -91,14 +79,7 @@ abstract class AbstractRestAPI
             415 => 'Unsupported Media Type',   
             500 => 'Internal Server Error'   
             ); 
-			if(array_key_exists($code, $status))
-			{
 				return $status[$code];	
-			}
-			else 
-			{
-				return $status[500];
-			}
-    }
+	}
 }
 ?>

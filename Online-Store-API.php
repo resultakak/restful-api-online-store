@@ -176,7 +176,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 		//Checking if the request needs response to be sorted
 		if(array_key_exists('sort', $this->query_params))
 		{
-			$sort = $this->sortSerialize($this->query_params['sort']);
+			$sort = APIUtils::sortSerialize($this->query_params['sort']);
 			unset($this->query_params['sort']);
 		}
 		
@@ -226,75 +226,63 @@ class OnlineStoreAPI extends AbstractRestAPI
 	    //Decoding the JSON input into a PHP Array
 		$array=json_decode($this->input_file,true);
         
-        $firstarray=Array();
-        $flag=false;
-        if(array_key_exists('0', $array))
-        {
-            $keys=array_keys($array[0]);
-            $flag=true;
-            for($i=0;$i<count($array[0]);$i++)
-            {
-                $firstarray[$keys[$i]]=$array[0][$keys[$i]];
-            }
-        }
+        //Fetch the single dimensional array in case it was fetched as a multidimensional array from JSON_DECODE(Because of [] enclosing the JSON array)
+        $array = APIUtils::fetch_Single_Array($array);
         
-        if($flag==true)
-        {
-        $array=$firstarray;
-        }
-        
+        //Calling the Insert Function of the DB Wrapper
 		$last_inserted_id = $this->db->insert($this->resourceData->TableName,$array);
 		
+        if($last_inserted_id)
+        {
+        //Making the condition parameters array. Sending it as a parameter to the select function so as to fetch the data to display
 		$conditionParamsArray = Array();
 		$conditionParamsArray[$this->resourceData->primarykey_field]=$last_inserted_id;
 		
+        //Calling the select function with the parameters which will also MemCache the newly inserted record
 		$this->_response($this->db->select($this->resourceData->TableName,'*',$conditionParamsArray,'limit 0,10',$this->resourceData->primarykey_field.' asc'),'201');
+        }
+        else {
+            $this->_response(array('error' => "resource could not get inserted"),'400');
+        }
 	}
 	
 	
 	//Function to update a resource
 	public function updateResource($id)
 	{
+	    //Decoding the JSON input into a PHP Array
 	    $array = json_decode($this->input_file,true);
-        $firstarray=Array();
-        $flag=false;
-        if(array_key_exists('0', $array))
-        {
-            $keys=array_keys($array[0]);
-            $flag=true;
-            for($i=0;$i<count($array[0]);$i++)
-            {
-                $firstarray[$keys[$i]]=$array[0][$keys[$i]];
-            }
-        }
         
+        //Fetch the single dimensional array in case it was fetched as a multidimensional array from JSON_DECODE(Because of [] enclosing the JSON array)
+        $array = APIUtils::fetch_Single_Array($array);
         
-        if($flag==true)
-        {
-        $array=$firstarray;
-        }
-        
+        //Checking if Resource ID in the URL matches the Resource ID in the input file
         if($array[$this->resourceData->primarykey_field]!=$id)
         {
                 $this->_response(array('error' => "Bad Request"),'400');
                 exit;
         }
         
-		$conditionParamsArray = Array();
+        //Making the condition parameters array. Sending it as a parameter to the select function so as to check whether the given record exists or not
+        $conditionParamsArray = Array();
 		$conditionParamsArray[$this->resourceData->primarykey_field]=$id;
 		
+		//Calling the select function to check whether the given record exists or not.
 		$arrays = $this->db->select($this->resourceData->TableName,'*',$conditionParamsArray,'',null);
 		if(count($arrays)>0)
 		{
+		    //If record exists, it will get updated.
 			$count = $this->db->update($this->resourceData->TableName,$array,$conditionParamsArray);
 			
+            //If update successful
 			if($count>0)
 			{
+			    //Select function is called to display the data just updated, will also Memcache the record just updated
 			    $this->_response($this->db->select($this->resourceData->TableName,'*',$conditionParamsArray,'limit 0,10',$this->resourceData->primarykey_field.' asc'),'200');
 			}
 			else 
 			{
-				$this->_response(array('error' => "resource could not get updated"),'200');
+				$this->_response(array('error' => "resource could not get updated"),'400');
 			}
 		}
 		else {
@@ -305,17 +293,21 @@ class OnlineStoreAPI extends AbstractRestAPI
 	 //Function to delete a resource. 
 	 public function deleteResource($id)
 	 {
-		$conditionParamsArray = Array();
+	    //Making the condition parameters array. Sending it as a parameter to the select function so as to check whether the given record exists or not
+        $conditionParamsArray = Array();
 		$conditionParamsArray[$this->resourceData->primarykey_field]=$id;
-			
-		$arrays = $this->db->select($this->resourceData->TableName,'*',$conditionParamsArray,'',null);
+		
+        //Calling the select function to check whether the given record exists or not.
+        $arrays = $this->db->select($this->resourceData->TableName,'*',$conditionParamsArray,'',null);
 		if(count($arrays)>0)
 		{
+		    //If record exists, it will get updated.
 			$count = $this->db->delete($this->resourceData->TableName,$conditionParamsArray);
 			
+            //If delete successful
 			if($count==0)
 			{
-			$this->_response(array('error' => "could not get deleted"),'200');
+			$this->_response(array('error' => "could not get deleted"),'400');
 			}
 			else 
 			{
@@ -326,39 +318,22 @@ class OnlineStoreAPI extends AbstractRestAPI
 			$this->_response(array('resource' => "not found"),'404');
 		}
 	}
-	
-    
-     
-	 //Converts query parameter sort='id,-name' to the format 'id asc, name desc' so that the string can be parsed in an 'order by' clause in SQL.
-	 public function sortSerialize($string)
-	 {
-	 	$sort='';
-		$temp=explode(',',$string);
-			
-		for($i=0;$i<count($temp);$i++)
-		{
-			$temp2 = str_split($temp[$i]);
-			if($temp2[0]=='-')
-			{
-				array_shift($temp2);
-				$sort = ($i==count($temp)-1) ? $sort.implode($temp2).' desc' : $sort.implode($temp2).' desc,';
-			}	
-			else 
-			{
-				$sort = ($i==count($temp)-1) ? $sort.implode($temp2).' asc' : $sort.implode($temp2).' asc,';
-			}			
-		}
-		return $sort;	
-	 }
 }
 
- 	try {
- 		$db=new db();
-		$r1 = new ResourceData('categories',$db,'categories');
-	    $API = new OnlineStoreAPI($_REQUEST['request'],$db,$r1);
-		$API->controllerMain();
-  //  	echo $API->processAPI();
+ 	  try { 
+     	    //Making a new database Object
+     		$db=new db();
+            
+            //Making a new Resource Data Object for Categories
+    		$r1 = new ResourceData('categories',$db,'categories');
+            
+            //Creating API Object and passing the parameter received from HTACCESS, the database object and the resource object
+    	    $API = new OnlineStoreAPI($_REQUEST['request'],$db,$r1);
+            
+            //Calling the Controller Function
+    		$API->processAPI();
 		} 
+    
 		catch (Exception $e) {
     		echo json_encode(Array('error' => $e->getMessage()));
 		}
