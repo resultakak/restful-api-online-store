@@ -238,7 +238,7 @@ class OnlineStoreAPI extends AbstractRestAPI
 		$conditionParamsArray = Array();
 		$conditionParamsArray[$this->resourceData->primarykey_field]=$last_inserted_id;
 		
-        //Calling the select function with the parameters which will also MemCache the newly inserted record
+        //Calling the select function with the parameters which will also MemCache the newly inserted record.
 		$this->_response($this->db->select($this->resourceData->TableName,'*',$conditionParamsArray,'limit 0,10',$this->resourceData->primarykey_field.' asc'),'201');
         }
         else {
@@ -331,7 +331,7 @@ class OnlineStoreAPI extends AbstractRestAPI
     	    $API = new OnlineStoreAPI($_REQUEST['request'],$db,$r1);
             
             //Calling the Controller Function
-    		$API->processAPI();
+    		$API->processRequests();
 		} 
     
 		catch (Exception $e) {

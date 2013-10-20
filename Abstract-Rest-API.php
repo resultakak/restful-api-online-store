@@ -73,7 +73,7 @@ abstract class AbstractRestAPI
    }
     
     //Controller function of the Abstract API. Calls the main controller function of the extended class
-	public function processAPI() 
+	public function processRequests() 
 	{
 	       $this->controllerMain();
     }
