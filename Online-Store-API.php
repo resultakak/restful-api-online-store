@@ -321,8 +321,8 @@ class OnlineStoreAPI extends AbstractRestAPI
 }
 
  	  try { 
-     	    //Making a new database Object
-     		$db=new db();
+     	    //Making a new database wrapper Object
+     		$db=new DBWrapper();
             
             //Making a new Resource Data Object for Categories
     		$r1 = new ResourceData('categories',$db,'categories');

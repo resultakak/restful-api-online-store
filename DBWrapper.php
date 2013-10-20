@@ -1,13 +1,21 @@
 <?php
-class db {
+require_once 'DBConfig.php';
 
-    public $conn; //PDO
-	public $memcache;
+class DBWrapper {
+    
+    //PDO Connection Object
+    private $conn; 
+    
+    //Memcache Connection Object
+	private $memcache;
+	
+    //Constructor
 	public function __construct()
 	{
 		try 
 	 	{
-     	$this->conn = new PDO('mysql:host=localhost;dbname=online-store', 'root', '');
+	 	//Connecting to the database host and database using the credentials    
+     	$this->conn = new PDO('mysql:host='.DB_HOST.';dbname='.DB_NAME.'',DB_USER,DB_PASSWORD);
      	$this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	 	}
 	 	catch(PDOException $e) 
@@ -15,11 +23,14 @@ class db {
      	echo 'ERROR: ' . $e->getMessage();
 		}
         
+        //Making a new Memcache Class Object
         $this->memcache = new Memcache; 
-        $this->memcache->connect("localhost",11211);  
-    
-	}
+        
+        //Connecting to Memcache at the Host 
+        $this->memcache->connect(DB_HOST,MEMCACHE_PORT);  
+    }
 	
+    //Function to get the primary key column name from a table
 	public function getPrimaryKey($table)
 	{
 		try
@@ -35,21 +46,8 @@ class db {
 		}
 	}
 	
-	public function getFields($table)
-	{
-		try
-		{
-			$stmt = $this->conn->prepare("DESCRIBE $table");
-			$stmt->execute();
-			return $stmt->fetchAll(PDO::FETCH_COLUMN);
-		}
-		catch(PDOException $e)
-		{
-			echo 'ERROR: ' . $e->getMessage();
-		}
-	}
-	
-    public function memcacheSelect($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC)
+    //Function returns a standard query string which can be parsed in SQL. 
+    public function getQueryString($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC)
     {
         $query_memcache = "SELECT $fields FROM $table";
             
@@ -73,19 +71,21 @@ class db {
             return $query_memcache;
     }
     
+    //Function to get records from database
     public function select($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
-        $query_memcache = $this->memcacheSelect($table, $fields, $conditionParams, $limit, $sort, $fetchStyle);
+        $query_memcache = $this->getQueryString($table, $fields, $conditionParams, $limit, $sort, $fetchStyle);
         
-        //Exact Match
+        //Condition to find an exact Memcache Match
         if($this->memcache->get(md5($query_memcache)))
         {
            $result =  $this->memcache->get(md5($query_memcache));
            return $result;
         }
         else {
-            if($fields!='*')
+            if($fields!='*') 
             {
-                $query_memcache_subset = $this->memcacheSelect($table, '*', $conditionParams, $limit, $sort, $fetchStyle);
+                //To find a match with all fields. Required fields can be taken out of the corresponding result set
+                $query_memcache_subset = $this->getQueryString($table, '*', $conditionParams, $limit, $sort, $fetchStyle);
                 if($this->memcache->get(md5($query_memcache_subset)))
                 {
                     $fields_array=explode(',',$fields);
@@ -113,7 +113,7 @@ class db {
         }
        
         $successful_execute=false;
-        //create query
+        
         $query = "SELECT $fields FROM $table";
         
 		if(count($conditionParams)>0)
@@ -155,12 +155,13 @@ class db {
         
         if($successful_execute)
         {
-            $query_memcache = $this->memcacheSelect($table, $fields, $conditionParams, $limit, $sort, $fetchStyle);
+            $query_memcache = $this->getQueryString($table, $fields, $conditionParams, $limit, $sort, $fetchStyle);
             $this->memcache->add(md5($query_memcache), $result,false, 60);
         }
         return $result;
     }
 	
+    //Function to insert records in table $table with parameters $params
 	public function insert($table,$params)
 	{
 		$query = "INSERT INTO $table(";
@@ -188,6 +189,7 @@ class db {
 		return $this->conn->lastInsertId();
     }
 	
+    //Function to update a record in $tabe, set updated data as in $updateParams, for the record matching $conditionsParams
 	public function update($table,$updateParams,$conditionParams)
 	{
 	    $query = "UPDATE $table SET ";
@@ -226,6 +228,7 @@ class db {
 		return $stmt->rowCount();
 	}
 	
+    //Function to delete a record from table $table which matches $conditionParams 
 	public function delete($table, $conditionParams)
 	{
         //create query

@@ -20,11 +20,13 @@ abstract class AbstractRestAPI
     public function __construct($request) {
         header("Content-Type: application/json");
 		
+        //Removing any slashes and the end of the requested resource and assigning it to $resource
 		$this->resource = rtrim($request,'/');
 		
+        //Storing the request method in its local variable
 		$this->method = $_SERVER['REQUEST_METHOD'];
 		
-		//since PHP is only capable of processing POST and GET and not PUT and DELETE. Try to find another code snippet.
+        //since DELETE and PUT requests are hidden inside a POST request.
 		if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
             if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'DELETE') {
                 $this->method = 'DELETE';
