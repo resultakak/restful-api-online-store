@@ -46,14 +46,20 @@ class DBWrapper {
 		}
 	}
 	
-    //Function returns a standard query string which can be parsed in SQL. 
+    //Function returns a standard query string from the standard query parameters which can be parsed in SQL. 
+    //Sample Input:- getQueryString('categories','*',Array(id->1,name->vehicles),'limit 0,10','id desc'
+    //Sample Output:- select * from categories where id='1' and name='Vehicles' order by id desc limit 0,10
     public function getQueryString($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC)
     {
-        $query_memcache = "SELECT $fields FROM $table";
+            $query_memcache = "SELECT $fields FROM $table";
             
+            //Checking if any conditions are there for the 'Where' Clause
             if(count($conditionParams)>0)
             {
                 $query_memcache.= " WHERE "; 
+                
+                //Fetching and appending the names of parameters and their values in the where clause
+                //in the format "where id=1 and name=test" etc
                 $keys=array_keys($conditionParams);
                 for($i=0;$i<count($keys);$i++)
                 {
@@ -63,18 +69,24 @@ class DBWrapper {
                 }
             }
             
+            //Checking if the request needs to be sorted
             if(isset($sort))
             {
             $query_memcache.= " order by $sort ";
             }
+            
+            //Applying the limit clause parameter
             $query_memcache.= "$limit";
+            
             return $query_memcache;
     }
     
     //Function to get records from database
     public function select($table, $fields = '*' ,  $conditionParams, $limit = '', $sort=null, $fetchStyle = PDO::FETCH_ASSOC) { //fetchArgs, etc
+     
+        //Getting the standard query string for the parameters from the getQueryString() function
         $query_memcache = $this->getQueryString($table, $fields, $conditionParams, $limit, $sort, $fetchStyle);
-        
+     
         //Condition to find an exact Memcache Match
         if($this->memcache->get(md5($query_memcache)))
         {
@@ -166,12 +178,14 @@ class DBWrapper {
 	{
 		$query = "INSERT INTO $table(";
 		
+        //finding and appending the query parameter names to the array in the format insert into table(id, name, description) 
 		$keys=array_keys($params);
 		for($i=0;$i<count($keys);$i++)
 		{
 			$query.= ($i==count($keys)-1)? $keys[$i] : $keys[$i].',';
 		}
 			
+            
 		$query.=") VALUES (";
 		for($i=0;$i<count($keys);$i++)
 		{
@@ -179,7 +193,10 @@ class DBWrapper {
 		}
 		$query.=")";
 		
+        
 		$stmt = $this->conn->prepare($query);
+        
+        //Binding the query paramaters to their values
         for($i=0;$i<count($keys);$i++)
 		{
 			$stmt->bindParam(':'.$keys[$i], $params[$keys[$i]]);
@@ -251,6 +268,7 @@ class DBWrapper {
 		
 		if(count($conditionParams)>0)
 		{
+		    //Binding the query paramaters to their values
 			for($i=0;$i<count($keys);$i++)
 			{
 				$stmt->bindParam(':'.$keys[$i], $conditionParams[$keys[$i]]);

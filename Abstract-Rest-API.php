@@ -40,15 +40,33 @@ abstract class AbstractRestAPI
         switch($this->method) {
         case 'DELETE': //Breaking in case DELETE is method since resource ID can be fetched from the URL. Query parameters or input file not needed
                        break;  
+        
         case 'POST':   //Storing JSON input into input_file variable
 			           $this->input_file = file_get_contents("php://input");
+                       
+                       //Condition to check whether input is in JSON format
+                       if(!(APIUtils::isJson($this->input_file)))
+                       {
+                           $this->_response(array('error' => "Input not in correct format"),'415');
+                           exit;
+                       }
 			           break;
+                       
         case 'GET':    //Storing $_GET query parameters into query_params variable
 			           $this->query_params = APIUtils::sanitizeInputs($_GET);
 			           break;
+                       
         case 'PUT':    //Storing JSON input into input_file variable
                        $this->input_file = file_get_contents("php://input");
+			           
+			           //Condition to check whether input is in JSON format
+			           if(!(APIUtils::isJson($this->input_file)))
+                       {
+                           $this->_response(array('error' => "Input not in correct format"),'415');
+                           exit;
+                       }
 			           break;
+                       
 		default:       $this->_response('Invalid Method', 405);
                        break;
         }
