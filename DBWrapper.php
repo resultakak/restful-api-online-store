@@ -186,7 +186,6 @@ class db {
                                     
 		$stmt->execute(); 
 		return $this->conn->lastInsertId();
-        
     }
 	
 	public function update($table,$updateParams,$conditionParams)
