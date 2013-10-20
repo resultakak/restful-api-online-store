@@ -50,11 +50,15 @@ class APIUtils
     public static function sanitizeInputs($data) 
     {
         $sanitized_input = Array();
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
+        if (is_array($data)) 
+        {
+            foreach ($data as $key => $value) 
+            {
                 $sanitized_input[$key] = APIUtils::sanitizeInputs($value);
             }
-        } else {
+        } 
+        else 
+        {
             $sanitized_input = trim(strip_tags($data));
         }
         return $sanitized_input;
