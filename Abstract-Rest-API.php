@@ -4,30 +4,30 @@ require_once 'APIUtil.php';
 
 abstract class AbstractRestAPI
 {
-	// The HTTP method of the request, either GET, POST, PUT or DELETE
+    // The HTTP method of the request, either GET, POST, PUT or DELETE
     protected $method = '';
     
     // The Resource requested in the URI. eg: /products/2/categories/1
     protected $resource = '';
-	
+    
     // Any query parameters appended with the URL for a PUT Request
     protected $query_params = Array();
     
     //Stores the input file of the POST or the PUT request
     protected $input_file = Null;
-	
+    
      //Constructor
     public function __construct($request) {
         header("Content-Type: application/json");
-		
+        
         //Removing any slashes and the end of the requested resource and assigning it to $resource
-		$this->resource = rtrim($request,'/');
-		
+        $this->resource = rtrim($request,'/');
+        
         //Storing the request method in its local variable
-		$this->method = $_SERVER['REQUEST_METHOD'];
-		
+        $this->method = $_SERVER['REQUEST_METHOD'];
+        
         //since DELETE and PUT requests are hidden inside a POST request.
-		if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
+        if ($this->method == 'POST' && array_key_exists('HTTP_X_HTTP_METHOD', $_SERVER)) {
             if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'DELETE') {
                 $this->method = 'DELETE';
             } else if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'PUT') {
@@ -42,7 +42,7 @@ abstract class AbstractRestAPI
                        break;  
         
         case 'POST':   //Storing JSON input into input_file variable
-			           $this->input_file = file_get_contents("php://input");
+                       $this->input_file = file_get_contents("php://input");
                        
                        //Condition to check whether input is in JSON format
                        if(!(APIUtils::isJson($this->input_file)))
@@ -50,32 +50,32 @@ abstract class AbstractRestAPI
                            $this->_response(array('error' => "Input not in correct format"),'415');
                            exit;
                        }
-			           break;
+                       break;
                        
         case 'GET':    //Storing $_GET query parameters into query_params variable
-			           $this->query_params = APIUtils::sanitizeInputs($_GET);
-			           break;
+                       $this->query_params = APIUtils::sanitizeInputs($_GET);
+                       break;
                        
         case 'PUT':    //Storing JSON input into input_file variable
                        $this->input_file = file_get_contents("php://input");
-			           
-			           //Condition to check whether input is in JSON format
-			           if(!(APIUtils::isJson($this->input_file)))
+                       
+                       //Condition to check whether input is in JSON format
+                       if(!(APIUtils::isJson($this->input_file)))
                        {
                            $this->_response(array('error' => "Input not in correct format"),'415');
                            exit;
                        }
-			           break;
+                       break;
                        
-		default:       $this->_response('Invalid Method', 405);
+        default:       $this->_response('Invalid Method', 405);
                        break;
         }
    }
     
     //Controller function of the Abstract API. Calls the main controller function of the extended class
-	public function processRequests() 
-	{
-	       $this->controllerMain();
+    public function processRequests() 
+    {
+           $this->controllerMain();
     }
 
     //Function to output response
@@ -99,7 +99,7 @@ abstract class AbstractRestAPI
             415 => 'Unsupported Media Type',   
             500 => 'Internal Server Error'   
             ); 
-				return $status[$code];	
-	}
+                return $status[$code];  
+    }
 }
 ?>
